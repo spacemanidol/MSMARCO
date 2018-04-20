@@ -113,7 +113,7 @@ Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machi
 Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machine Reading Comprehension system is expected to read and understand both the questions and passages. For this task all queries have an answer so systems do not need to understand No Answer Queries. Using the relevant passages a successful system should produce a candidate answer that should be as close as possible to the human generated well formed refrence answers RA= wfra1,wfra2,...,wfram. Evaluation will be done using ROUGE-L, BLEU-1, and a to be annonced metric.
 
 ##### Expert Task
-Given a query q, and a set of Document D = d1,d2,...,dn(without usage of the passages) a successful Machine Reading Comprehension system is expected to read and understand both the questions and documents. Then, the system, using all of the documents must produce a candidate answer that should be as close as possible to the human generated refrence answers RA= ra1,ra2,...,ram. Evaluation will be done using ROUGE-L, BLEU-1, and a to be annonced metric.
+TBD
 
 ### Evaluation
 Evaluation of systems will be done using the industry standard BLEU and ROUGE-L. These are far from perfect but have been the best option we have found that scales. If you know of a better metric or want to brainstorm creating one please contact us.
