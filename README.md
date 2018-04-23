@@ -82,27 +82,6 @@ You can use the explore datafile to generate similiar statistics on any slice yo
 python3 exploredata.py <your_input_file(json)> <-p if you are using a dataslice without answers>
 ~~~
 
-#### Full Documents and Unique URLS
-As part of our expert challange and our expanded dataset, we are releasing 3213835 complete web documents out of the 3563535 cited in our dataset. These have been generated using internal bing tooling and have been preped and clean for public consumption. The file is availible in 2 forms, 1 large file or 5 files which together make up the large file. Each file is in the jsonl format where each line is a url/document. 
-
-Each line/entry contains the following parrametrs described below: url, document_text, title.
-
-1. url: a unique string that links to the original document.
-2. document_text: The entire text of a document, from which our passages are derived. There may be minor or major variations between the document and passage since they were not generated at the same time. 
-3. title : The cleaned and unique document title the url has presented. Not there is a subset of documents that no title was availible and they have been annotated as such.
-
-example
-~~~
-{
-	"url":"https://answers.yahoo.com/question/index?qid=20071007114826AAwCFvR",
-	"title":"The hot glowing surfaces of stars emit energy in the form of electromagnetic radiation.?",
-	"document_text":"Science & Mathematics PhysicsThe hot glowing surfaces of stars emit energy in the form of electromagnetic radiation.?It is a good approximation to assume that the emissivity e is equal to 1 for these surfaces.  Find the radius of the star Rigel, the bright blue star in the constellation Orion that radiates energy at a rate of 2.7 x 10^32 W and has a surface temperature of 11,000 K. Assume that the star is spherical. Use \u03c3 =... show moreFollow 3 answersAnswersRelevanceRatingNewestOldestBest Answer: Stefan-Boltzmann law states that the energy flux by radiation is proportional to the forth power of the temperature: q = \u03b5 \u00b7 \u03c3 \u00b7 T^4 The total energy flux at a spherical surface of Radius R is Q = q\u00b7\u03c0\u00b7R\u00b2 = \u03b5\u00b7\u03c3\u00b7T^4\u00b7\u03c0\u00b7R\u00b2 Hence the radius is R = \u221a ( Q / (\u03b5\u00b7\u03c3\u00b7T^4\u00b7\u03c0) ) = \u221a ( 2.7x10+32 W / (1 \u00b7 5.67x10-8W/m\u00b2K^4 \u00b7 (1100K)^4 \u00b7 \u03c0) ) = 3.22x10+13 mSource (s):http://en.wikipedia.org/wiki/Stefan_bolt...schmiso \u00b7 1 decade ago0 18 CommentSchmiso, you forgot a 4 in your answer. Your link even says it: L = 4pi (R^2)sigma (T^4). Using L, luminosity, as the energy in this problem, you can find the radius R by doing sqrt (L/ (4pisigma (T^4)). Hope this helps everyone.Caroline \u00b7 4 years ago4 1 Comment (Stefan-Boltzmann law) L = 4pi*R^2*sigma*T^4 Solving for R we get: => R = (1/ (2T^2)) * sqrt (L/ (pi*sigma)) Plugging in your values you should get: => R = (1/ (2 (11,000K)^2)) *sqrt ( (2.7*10^32W)/ (pi * (5.67*10^-8 W/m^2K^4))) R = 1.609 * 10^11 m? \u00b7 3 years ago0 1 CommentMaybe you would like to learn more about one of these?Want to build a free website? Interested in dating sites?Need a Home Security Safe? How to order contacts online?"
-
-}
-~~~
-
-We have included called uniqueurls.tsv which is a list of all unique urls. This can be useful for exploration and general joining of documents queries to documents.
-
 ### Tasks
 In an effort to produce a dataset that can continue to be challanging and rewarding we have broken down the MSMARCO dataset into tasks of varying difficulty.
 
