@@ -87,7 +87,7 @@ def load_file(p_path_to_data):
             answers = json_object[ANSWERS_JSON_ID]
             if 'No Answer Present.' in answers:
                 no_answer_query_ids.add(query_id)
-  
+                answers = ['']
             all_answers.extend(answers)
             query_ids.extend([query_id]*len(answers))
 
@@ -129,8 +129,8 @@ def compute_metrics_from_files(p_path_to_reference_file,
     false_negatives = len(query_id_answerable)-true_positives
     true_negatives = len(candidate_no_answer_query_ids.intersection(reference_no_answer_query_ids))
     false_positives = len(reference_no_answer_query_ids)-true_negatives
-    precision = true_positives/(true_positives+false_positives)
-    recall = true_positives/(true_positives+false_negatives)
+    precision = float(true_positives)/(true_positives+false_positives) if (true_positives+false_positives)>0 else 1.
+    recall = float(true_positives)/(true_positives+false_negatives) if (true_positives+false_negatives)>0 else 1.
     F1 = 2 *((precision*recall)/(precision+recall))
     filtered_reference_dictionary = \
         {key: value for key, value in reference_dictionary.items() \
