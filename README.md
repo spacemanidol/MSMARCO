@@ -52,6 +52,9 @@ example
 	"wellFormedAnswers":"[]"
 }
 ~~~
+## Download the Dataset
+
+To Download the MSMARCO Dataset please navigate to [msmarco.org](http://www.msmarco.org/dataset.aspx) and agree to our Terms and Conditions.
 
 ## Utilities, Stats and Related Content
 Besides the main files containing judgments, we are releasing various utilites to help people explore the data and optimize the data for their needs. They have only been tested with python 3.5 and are provided as is. Usage is noted below. If you write any utils you feel the community could use and enjoy please submit them with a pull request.
@@ -86,10 +89,10 @@ python3 exploredata.py <your_input_file(json)> <-p if you are using a dataslice 
 In an effort to produce a dataset that can continue to be challanging and rewarding we have broken down the MSMARCO dataset into tasks of varying difficulty.
 
 ##### Novice Task
-Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machine Reading Comprehension system is expected to read and understand both the questions and passages. Then, the system must accuratley decide if the passages provide addequate information to answer the query since not all queries have an answer. If there is not enough information, the system should response 'No Answer Present.'. If there is enough information the system should create a quality answer. The target of the answer a should be as close as possible to the human generated refrence answers RA= ra1,ra2,...,ram. Evaluation will be done using ROUGE-L, BLEU-1, and a to be annonced metric. To ensure systems are robust and can addapt to queries without an answer this tasks score will be weighted. This weight will be derived by obtaining the average system success score over Q, which is the set of query-passage pairs. To obtain the system success score for a query q do the following(scripts to follow). Given a query q and passages P, if the reference answer is 'No Answer Present.' and the system produces and answer award a score of 0, If the reference answer is not 'No Answer Present.' and the system produces the answer of 'No answer Present.' award a score of 0. All other options gain a score of 1.
+Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machine Reading Comprehension system is expected to read and understand both the questions and passages. Then, the system must accuratley decide if the passages provide addequate information to answer the query since not all queries have an answer. If there is not enough information, the system should response 'No Answer Present.'. If there is enough information the system should create a quality answer. The target of the answer a should be as close as possible to the human generated refrence answers RA= ra1,ra2,...,ram. Evaluation will be done using ROUGE-L, BLEU-1, and a F1 score computed by measuring how well a system can know to answer questions or not. Questions that have the do not have an answer will not be used to calculate ROUGE-L or BLEU-1.
 
 ##### Intermediate Task
-Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machine Reading Comprehension system is expected to read and understand both the questions and passages. For this task all queries have an answer so systems do not need to understand No Answer Queries. Using the relevant passages a successful system should produce a candidate answer that should be as close as possible to the human generated well formed refrence answers RA= wfra1,wfra2,...,wfram. Evaluation will be done using ROUGE-L, BLEU-1, and a to be annonced metric.
+Given a query q, and a set of passages P = p1, p2, p3,... p10 a successful Machine Reading Comprehension system is expected to read and understand both the questions and passages. For this task all queries have an answer so systems do not need to understand No Answer Queries. Using the relevant passages a successful system should produce a candidate answer that should be as close as possible to the human generated well formed refrence answers RA= wfra1,wfra2,...,wfram. Evaluation will be done using ROUGE-L and BLEU-1.
 
 ##### Expert Task
 TBD
@@ -97,11 +100,11 @@ TBD
 ### Evaluation
 Evaluation of systems will be done using the industry standard BLEU and ROUGE-L. These are far from perfect but have been the best option we have found that scales. If you know of a better metric or want to brainstorm creating one please contact us.
 
-We have made the official evaluation script along with a sample output file on the dev set available for download as well so that you can evaluate your models. [Download the evaluation scripts](https://msmarco.blob.core.windows.net/msmarco/ms_marco_eval.tar.gz) The evaluation script takes as inputs a reference and candidate output file. You can execute the evaluation script to evaluate your models as follows:
+We have made the official evaluation script along with a sample output file on the dev set available for download as well so that you can evaluate your models. [Download the evaluation scripts](https://github.com/dfcf93/MSMARCOV2/tree/master/Evaluation) The evaluation script takes as inputs a reference and candidate output file. You can execute the evaluation script to evaluate your models as follows:
 ./run.sh <path to reference json file> <path to candidate json file> 
 	
-Current evaluation scripts do not contain the discounted scores mentioned in the novice task but should soon be released. 
-
+### Leaderboard Results
+To Help Teams iterate we are making the results of official submissions on our evaluation script(the scores, not the full submissions)availible. We will update these files as we update metrics and as new submisions come in. They can be found in the [Leaderboard Results](https://github.com/dfcf93/MSMARCOV2/tree/master/Leaderboard%20Results) folder.
 ### Submissions
 Once you have built a model that meets your expectations on evaluation with the dev set, you can submit your test results to get official evaluation on the test set. To ensure the integrity of the official test results, we do not release the correct answers for test set to the public. To submit your model for official evaluation on the test set, follow the below steps:
 Run the evaluation script on the test set and generate the output results file for submission
@@ -113,6 +116,17 @@ Paper Information: Name, Citation, URL of the paper if model is from a published
 
 Please submit your results either in json or jsonl format and ensure that each answer you are providing has its refrence query_id and query_text. If your model does not have query_id and query_text it is difficult/impossible to evalutate the submission.
 To avoid "P-hacking" we discourage too many submissions from the same group in a short period of time. Because submissions don't require the final trained model we also retain the right to request a model to validate the results being submitted
+### Run baseline systems on multilingual datasets
+To encourage competitors to generate performant systems regardless of the langauge we recommend teams also test their systems on datasets in other langauges such as Baidu's DuReader.
+
+[DuReader](https://ai.baidu.com/broad/subordinate?dataset=dureader) is a Chinese dataset focused on machine reading comprehension and question answering. Its design and area of focus is very similair to that of MSMARCO. The DuReader team has created scripts to allow DuReader system to use msmarco data and we have created scripts to allow MSMARCO teams to use DuReader data. We Strongly recommend training and testing your system with both datasets. We are in the process of creating an analysis tool that would take results to both systems and debug the wins/losses. 
+
+To download the DuReader Data navigate to their [Git Repo](https://github.com/baidu/DuReader) and follow their instructions to download the data. After you have downloaded and processed the data you can run our converter scripts to turn the data into MSMARCO format as below.
+'''
+python3 duread_to_msmarco.py ~/Data/dureader/train/search.train.json ~/Data/dureader/train/search.train.msmarcoformat.json
+'''
+
+We have not experimented with how model perform using [Transfer Learning](http://cs231n.github.io/transfer-learning/) but are excited to see what the community finds.
 
 ### Feedback
 MS MARCO has been designed not as a dataset to be beat but an effort to establish a large community of researchers working on Machine Comprehension. If you have any thoughts on things we can do better, ideas for how to use datasets or general question please dont hesitate to [reach out and ask](mailto:ms-marco@microsoft.com?subject=MS MARCO Feedback).
