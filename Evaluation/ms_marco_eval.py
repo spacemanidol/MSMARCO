@@ -16,14 +16,16 @@ import json
 import sys
 import spacy
 
-from bleu.bleu import Bleu
-from rouge.rouge import Rouge
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.bleu_score import SmoothingFunction
+from rouge import Rouge 
 from spacy.lang.en import English as NlpEnglish
 nlp = spacy.load('en_core_web_lg') 
 QUERY_ID_JSON_ID = 'query_id'
 ANSWERS_JSON_ID = 'answers'
 NLP = None
 MAX_BLEU_ORDER = 4
+YES_NO_DISCOUNT_RATE = 0.80
 
 def normalize_batch(p_iter, p_batch_size=1000, p_thread_count=5):
     """Normalize and tokenize strings.
@@ -153,27 +155,47 @@ def compute_metrics_from_files(p_path_to_reference_file,
             (len(common_query_ids) == len(candidate_query_ids)), \
            'Reference and candidate files must share same query ids'
 
-    all_scores = {}
-    bleu_scores, _ = \
-        Bleu(p_max_bleu_order).compute_score(filtered_reference_dictionary, \
-                                             filtered_candidate_dictionary)
-    for i, bleu_score in enumerate(bleu_scores):
-        all_scores['bleu_%d' % (i+1)] = bleu_score
-
-    rouge_score, _ = Rouge().compute_score(filtered_reference_dictionary, \
-                                           filtered_candidate_dictionary)
-    all_scores['rouge_l'] = rouge_score
-    all_scores['F1'] = F1
     similarity = 0
+    bleu = [0,0,0,0]
+    rouge_score = 0
+    rouge = Rouge()
+    smoothie = SmoothingFunction().method4
+
     for key in filtered_reference_dictionary:
-        candidate_answer = nlp(filtered_candidate_dictionary[key][0])
-        reference_answer = filtered_reference_dictionary[key]
-        answersimilarity = 0
-        for answer in reference_answer:
-            answersimilarity += candidate_answer.similarity(nlp(answer))
-        similarity += answersimilarity/len(reference_answer)
-    semantic_similarity = similarity/len(filtered_reference_dictionary)
-    all_scores['Semantic_Similarity'] = semantic_similarity
+        candidate_answer = filtered_candidate_dictionary[key][0]
+        nlp_candidate_answer = nlp(candidate_answer)
+        reference_answers = filtered_reference_dictionary[key]
+        candidate_values = [0,0,0,0,0,0]
+        selected_values = [0,0,0,0,0,0]
+        for reference_answer in reference_answers:
+            reference_split = reference_answer.split(',')
+            candidate_values[0] = nlp_candidate_answer.similarity(nlp(reference_answer))
+            candidate_values[1] = rouge.get_scores(candidate_answer, reference_answer)[0]['rouge-l']['f']
+            candidate_values[2] = sentence_bleu(reference_answer, candidate_answer, weights=(1, 0, 0, 0), smoothing_function=smoothie)
+            candidate_values[3] = sentence_bleu(reference_answer, candidate_answer, weights=(0.5,0.5,0,0), smoothing_function=smoothie)
+            candidate_values[4] = sentence_bleu(reference_answer, candidate_answer, weights=(0.33,0.33,0.33,0), smoothing_function=smoothie)
+            candidate_values[5] = sentence_bleu(reference_answer, candidate_answer, weights=(0.25,0.25,0.25,0.25), smoothing_function=smoothie)
+
+            #partial credit for yes/no when complete answer is a yes/no question
+            if (candidate_answer == 'yes' or candidate_answer == 'no') and (len(reference_split) > 1) and (candidate_answer == reference_split[0].strip()):
+                for i in range(0,6):
+                    selected_values[i] += max(candidate_values[i], YES_NO_DISCOUNT_RATE)
+            else:
+                for i in range(0,6):
+                    selected_values[i] += candidate_values[i]
+
+        similarity += (selected_values[0]/len(reference_answers))
+        rouge_score += (selected_values[1]/len(reference_answers))
+        for i in range (0,4):
+            bleu[i] += (selected_values[i+2]/len(reference_answers))
+        semantic_similarity = similarity/len(filtered_reference_dictionary)
+    
+    all_scores = {}
+    all_scores['F1'] = F1
+    all_scores['Semantic_Similarity'] = (semantic_similarity/len(filtered_reference_dictionary))
+    all_scores['rouge_l'] = (rouge_score/len(filtered_reference_dictionary))
+    for i in range(0,4):
+        all_scores['bleu_%d' % (i+1)] = (bleu[i]/len(filtered_reference_dictionary))
     return all_scores
 
 def main():
@@ -181,7 +203,6 @@ def main():
 
     path_to_reference_file = sys.argv[1]
     path_to_candidate_file = sys.argv[2]
-
     metrics = compute_metrics_from_files(path_to_reference_file, \
                                          path_to_candidate_file, \
                                          MAX_BLEU_ORDER)
