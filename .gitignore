@@ -1,6 +1,6 @@
-BidafBaseline/experiment/
-BidafBaseline/mrcqa/__pycache__/
-BidafBaseline/mrcqa/modules/
-BidafBaseline/scripts/__pycache__/
+Q+A/BidafBaseline/experiment/
+Q+A/BidafBaseline/mrcqa/__pycache__/
+Q+A/BidafBaseline/mrcqa/modules/
+Q+A/BidafBaseline/scripts/__pycache__/
 *.pyc
 
