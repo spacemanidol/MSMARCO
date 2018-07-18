@@ -14,6 +14,8 @@ from __future__ import print_function
 import json
 import sys
 import spacy
+import unicodedata
+
 
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
@@ -25,6 +27,12 @@ QUERY_ID_JSON_ID = 'query_id'
 ANSWERS_JSON_ID = 'answers'
 NLP = None
 YES_NO_DISCOUNT_RATE = 0.80
+
+tbl = dict.fromkeys(i for i in range(sys.maxunicode)
+                      if unicodedata.category(chr(i)).startswith('P'))
+
+def remove_punctuation(text):
+    return text.translate(tbl)
 
 def normalize_batch(p_iter, p_batch_size=1000, p_thread_count=5):
     """Normalize and tokenize strings.
@@ -148,46 +156,47 @@ def compute_metrics_from_files(p_path_to_reference_file,
             (len(common_query_ids) == len(candidate_query_ids)), \
            'Reference and candidate files must share same query ids'
 
-    similarity = 0
+    semantic_similarity = 0
     bleu = [0,0,0,0]
     rouge_score = 0
     rouge = Rouge()
     smoothie = SmoothingFunction().method4
 
     for key in reference_dictionary:
-        candidate_answer = candidate_dictionary[key][0]
+        candidate_answer = remove_punctuation(candidate_dictionary[key][0])
         nlp_candidate_answer = nlp(candidate_answer)
         reference_answers = reference_dictionary[key]
         candidate_values = [0,0,0,0,0,0]
         selected_values = [0,0,0,0,0,0]
         for reference_answer in reference_answers:
-            if reference_answer  == "no answer present .":
-                #if no answer is possible assign 1 if no answer was provided and 0 if an answer was provided
-                if candidate_answer == reference_answer:
-                    for i in range(0,6):
-                        selected_values[i] += 1
-            else:
-                reference_split = reference_answer.split(',')
-                candidate_values[0] = nlp_candidate_answer.similarity(nlp(reference_answer))
-                candidate_values[1] = rouge.get_scores(candidate_answer, reference_answer)[0]['rouge-l']['f']
-                candidate_values[2] = sentence_bleu(reference_answer, candidate_answer, weights=(1, 0, 0, 0), smoothing_function=smoothie)
-                candidate_values[3] = sentence_bleu(reference_answer, candidate_answer, weights=(0.5,0.5,0,0), smoothing_function=smoothie)
-                candidate_values[4] = sentence_bleu(reference_answer, candidate_answer, weights=(0.33,0.33,0.33,0), smoothing_function=smoothie)
-                candidate_values[5] = sentence_bleu(reference_answer, candidate_answer, weights=(0.25,0.25,0.25,0.25), smoothing_function=smoothie)
-                #partial credit for yes/no when complete answer is a yes/no question
-                if (candidate_answer == 'yes' or candidate_answer == 'no') and (len(reference_split) > 1) and (candidate_answer == reference_split[0].strip()):
-                    for i in range(0,6):
-                        selected_values[i] += max(candidate_values[i], YES_NO_DISCOUNT_RATE)
+            if candidate_answer != ' ':
+                reference_answer = remove_punctuation(reference_answer)
+                if reference_answer  == "no answer present":
+                    #if no answer is possible assign 1 if no answer was provided and 0 if an answer was provided
+                    if candidate_answer == reference_answer:
+                        for i in range(0,6):
+                            selected_values[i] += 1
                 else:
-                    for i in range(0,6):
-                        selected_values[i] += candidate_values[i]
+                    reference_split = reference_answer.split(',')
+                    candidate_values[0] = nlp_candidate_answer.similarity(nlp(reference_answer))
+                    candidate_values[1] = rouge.get_scores(candidate_answer, reference_answer)[0]['rouge-l']['f']
+                    candidate_values[2] = sentence_bleu(reference_answer, candidate_answer, weights=(1, 0, 0, 0), smoothing_function=smoothie)
+                    candidate_values[3] = sentence_bleu(reference_answer, candidate_answer, weights=(0.5,0.5,0,0), smoothing_function=smoothie)
+                    candidate_values[4] = sentence_bleu(reference_answer, candidate_answer, weights=(0.33,0.33,0.33,0), smoothing_function=smoothie)
+                    candidate_values[5] = sentence_bleu(reference_answer, candidate_answer, weights=(0.25,0.25,0.25,0.25), smoothing_function=smoothie)
+                    #partial credit for yes/no when complete answer is a yes/no question
+                    if (candidate_answer == 'yes' and reference_answer[0:3] == candidate_answer) or (candidate_answer == 'no'and reference_answer[0:2] == candidate_answer):
+                        for i in range(0,6):
+                            selected_values[i] += max(candidate_values[i], YES_NO_DISCOUNT_RATE)
+                    else:
+                        for i in range(0,6):
+                            selected_values[i] += candidate_values[i]
 
-        similarity += (selected_values[0]/len(reference_answers))
+        semantic_similarity += (selected_values[0]/len(reference_answers))
         rouge_score += (selected_values[1]/len(reference_answers))
 
         for i in range (0,4):
             bleu[i] += (selected_values[i+2]/len(reference_answers))
-        semantic_similarity = similarity/len(reference_dictionary)
     
     all_scores = {}
     all_scores['F1'] = F1
