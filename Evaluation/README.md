@@ -6,12 +6,14 @@ Evaluation codes for MS MaRCo (Microsoft MAchine Reading COmprehension Dataset).
 ## Requirements ##
 - python 3.5 : https://www.python.org/downloads/
 - spacy: https://spacy.io/docs/usage/
+- NLTK: http://www.nltk.org/
+- Rouge: https://pypi.org/project/rouge/
 
 ## Instructions ##
 Execute run.sh from /ms_marco_metrics/ in command line:
-/ms_marco_metrics$ ./run.sh <path to reference json file> <path to candidate json file>
+/ms_marco_metrics$ python ms_marco_eval.py <path to reference json file> <path to candidate json file>
 Example:
-/ms_marco_metrics$ ./run.sh /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json
+/ms_marco_metrics$ python ms_marco_eval.py /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json
 
 Each line in both reference and candidate json files should be in format:
 {"query_id": <a_query_id_int>, "answers": [<list_of_answers_string>]}
@@ -32,7 +34,6 @@ rouge_l: 3.093306E-02
 - ms_marco_eval.py: MS MaRCo Evaluation script.
 - ms_marco_eval_test.py: Unit tests of ms_marco_eval.py .
 - LICENSE
-- run.sh: This script downloads dependent scripts, and compute evaluation metrics for MS MaRCo data set.
 
 ./sample_test_data
 - dev_as_references.json : unit test input from dev set.
@@ -47,8 +48,8 @@ rouge_l: 3.093306E-02
 ## References ##
 - [Microsoft MAchine Reading COmprehension Dataset](https://arxiv.org/pdf/1611.09268v1.pdf).
 - spaCy: We use [spaCy](https://spacy.io) for string tokenization and normalization.
-- BLEU: We use [bleu-n calculation](https://github.com/tylin/coco-caption/tree/master/pycocoevalcap/bleu) from MS-COCO-caption; [BLEU: a Method for Automatic Evaluation of Machine Translation](http://www.aclweb.org/anthology/P02-1040.pdf).
-- Rouge-L: We use [rouge-l calculation](https://github.com/tylin/coco-caption/tree/master/pycocoevalcap/rouge) from MS-COCO-caption; [ROUGE: A Package for Automatic Evaluation of Summaries](http://anthology.aclweb.org/W/W04/W04-1013.pdf).
+- BLEU: We use [bleu-n calculation](http://www.nltk.org/_modules/nltk/translate/bleu_score.html) from MS-COCO-caption; [BLEU: a Method for Automatic Evaluation of Machine Translation](http://www.aclweb.org/anthology/P02-1040.pdf).
+- Rouge-L: We use [rouge-l calculation](https://pypi.org/project/rouge/) from MS-COCO-caption; [ROUGE: A Package for Automatic Evaluation of Summaries](http://anthology.aclweb.org/W/W04/W04-1013.pdf).
 
 ## Developers ##
-- Tri Nguyen <trnguye@microsoft.com>, Tong Wang <tongw@microsoft.com>, Xia Song <xiaso@microsoft.com>
+- Tri Nguyen <trnguye@microsoft.com>, Tong Wang <tongw@microsoft.com>, Xia Song <xiaso@microsoft.com>, Daniel Campos <dacamp@microsoft.com>
