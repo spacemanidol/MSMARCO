@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # File Name : bleu.py
 #
 # Description : Wrapper for BLEU scorer.
@@ -7,9 +7,11 @@
 # Creation Date : 06-01-2015
 # Last Modified : Thu 19 Mar 2015 09:13:28 PM PDT
 # Authors : Hao Fang <hfang@uw.edu> and Tsung-Yi Lin <tl483@cornell.edu>
+#
+# Add instance level bleu score by xiaodl on 7-31-2018
 
-from bleu_scorer import BleuScorer
-
+from .bleu_scorer import BleuScorer
+import numpy as np
 
 class Bleu:
     def __init__(self, n=4):
@@ -17,6 +19,27 @@ class Bleu:
         self._n = n
         self._hypo_for_image = {}
         self.ref_for_image = {}
+
+    def compute_instance_level_score(self, gts, res):
+        """Instance level bleu score
+        """
+        assert(sorted(gts.keys()) == sorted(res.keys()))
+        imgIds = list(gts.keys())
+        score_list = []
+        for id in imgIds:
+            bleu_scorer = BleuScorer(n=self._n)
+            hypo = res[id]
+            ref = gts[id]
+            # Sanity check.
+            assert(type(hypo) is list)
+            assert(len(hypo) == 1)
+            assert(type(ref) is list)
+            assert(len(ref) >= 1)
+
+            bleu_scorer += (hypo[0], ref)
+            score, _ = bleu_scorer.compute_score(option='closest', verbose=0)
+            score_list.append(score)
+        return np.asarray(score_list).mean(0).tolist(), score_list
 
     def compute_score(self, gts, res):
 

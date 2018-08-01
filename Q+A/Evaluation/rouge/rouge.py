@@ -56,7 +56,7 @@ class Rouge():
 
         # split into tokens
         token_c = candidate[0].split(" ")
-    	
+
         for reference in refs:
             # split into tokens
             token_r = reference.split(" ")
@@ -82,7 +82,7 @@ class Rouge():
         :param ref_for_image: dict : reference MS-COCO sentences with "image name" key and "tokenized sentences" as values
         :returns: average_score: float (mean ROUGE-L score computed by averaging scores for all the images)
         """
-        assert(sorted(gts.keys()) == sorted(res.keys())
+        assert(sorted(gts.keys()) == sorted(res.keys()))
         imgIds = list(gts.keys())
 
         score = []

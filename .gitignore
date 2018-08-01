@@ -3,4 +3,10 @@ Q+A/BidafBaseline/mrcqa/__pycache__/
 Q+A/BidafBaseline/mrcqa/modules/
 Q+A/BidafBaseline/scripts/__pycache__/
 *.pyc
-
+*.DS_Store
+*~
+.vs/*
+*.pyproj
+*.sln
+*private*
+test*

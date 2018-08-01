@@ -19,7 +19,8 @@ import spacy
 from bleu.bleu import Bleu
 from rouge.rouge import Rouge
 from spacy.lang.en import English as NlpEnglish
-nlp = spacy.load('en_core_web_lg') 
+from instance_bleu import compute_instance_level_score_nltk
+nlp = spacy.load('en_core_web_lg')
 QUERY_ID_JSON_ID = 'query_id'
 ANSWERS_JSON_ID = 'answers'
 NLP = None
@@ -85,7 +86,9 @@ def load_file(p_path_to_data):
                 '\"%s\" json does not have \"%s\" field' % \
                     (line, ANSWERS_JSON_ID)
             answers = json_object[ANSWERS_JSON_ID]
-            if 'No Answer Present.' in answers:
+
+            # support version 1.x
+            if 'No Answer Present.' in answers or len(answers) == 0:
                 no_answer_query_ids.add(query_id)
                 answers = ['']
             all_answers.extend(answers)
@@ -122,13 +125,13 @@ def compute_metrics_from_files(p_path_to_reference_file,
     reference_dictionary, reference_no_answer_query_ids = \
         load_file(p_path_to_reference_file)
     candidate_dictionary, candidate_no_answer_query_ids = load_file(p_path_to_candidate_file)
-    query_id_answerable = set(reference_dictionary.keys())-reference_no_answer_query_ids
-    query_id_answerable_candidate = set(candidate_dictionary.keys())-candidate_no_answer_query_ids
-    
+    query_id_answerable = set(reference_dictionary.keys()) - reference_no_answer_query_ids
+    query_id_answerable_candidate = set(candidate_dictionary.keys()) - candidate_no_answer_query_ids
+
     true_positives = len(query_id_answerable_candidate.intersection(query_id_answerable))
-    false_negatives = len(query_id_answerable)-true_positives
+    false_negatives = len(query_id_answerable) - true_positives
     true_negatives = len(candidate_no_answer_query_ids.intersection(reference_no_answer_query_ids))
-    false_positives = len(reference_no_answer_query_ids)-true_negatives
+    false_positives = len(reference_no_answer_query_ids) - true_negatives
     precision = float(true_positives)/(true_positives+false_positives) if (true_positives+false_positives)>0 else 1.
     recall = float(true_positives)/(true_positives+false_negatives) if (true_positives+false_negatives)>0 else 1.
     F1 = 2 *((precision*recall)/(precision+recall))
@@ -154,8 +157,13 @@ def compute_metrics_from_files(p_path_to_reference_file,
            'Reference and candidate files must share same query ids'
 
     all_scores = {}
+    #bleu_scores, _ = \
+    #    Bleu(p_max_bleu_order).compute_score(filtered_reference_dictionary, \
+    #                                         filtered_candidate_dictionary)
+
+    ## instance level bleu score
     bleu_scores, _ = \
-        Bleu(p_max_bleu_order).compute_score(filtered_reference_dictionary, \
+        Bleu(p_max_bleu_order).compute_instance_level_score(filtered_reference_dictionary, \
                                              filtered_candidate_dictionary)
     for i, bleu_score in enumerate(bleu_scores):
         all_scores['bleu_%d' % (i+1)] = bleu_score
