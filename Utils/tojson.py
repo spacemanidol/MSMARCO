@@ -12,6 +12,9 @@ if __name__ == '__main__':
     with open(infile,'r') as f:
         for l in f:
             j = json.loads(l)
-            s = pd.Series([j['query'],j['query_id'],j['query_type'],j['passages']],['query','query_id','query_type','passages'])
+            if 'answers' in j:
+                s = pd.Series([j['query'],j['query_id'],j['query_type'],j['passages'],j['answers'],j['wellFormedAnswers']],['query','query_id','query_type','passages','answers','wellFormedAnswers'])
+            else:
+                s = pd.Series([j['query'],j['query_id'],j['query_type'],j['passages']],['query','query_id','query_type','passages'])
             df = df.append(s, ignore_index = True)
     df.to_json(outfile)
