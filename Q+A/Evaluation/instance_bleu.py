@@ -10,7 +10,8 @@ def compute_instance_level_score_nltk(gts, res):
     imgIds = list(gts.keys())
     score_list = []
     smooth = SmoothingFunction()
-    smooth_func = smooth.method1
+    # smooth_func = smooth.method1
+    smooth_func = smooth.method0
     for id in imgIds:
         hypo = res[id][0].split()
         ref = gts[id]
