@@ -18,6 +18,6 @@ training:
         - 0.999
     eps: 0.00000001
     weigth_decay: 0
-    epochs: 30
+    epochs: 1
     batch_size: 30
     limit: 400
