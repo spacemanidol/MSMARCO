@@ -24,7 +24,7 @@ if __name__ == '__main__':
             w.write(str(row[1].to_json())+'\n')
     #write only the submisions that have well formed answer as candidates
     with open(infile2, 'r') as f:
-        with open('candidate' + outfile,'w') as w:
+        with open(outfile,'w') as w:
             for l in f:
                 j = json.loads(l)
                 if j['query_id'] in ids:
