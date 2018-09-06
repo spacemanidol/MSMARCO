@@ -2,4 +2,10 @@ Q+A/BidafBaseline/experiment/
 Q+A/BidafBaseline/mrcqa/__pycache__/
 Q+A/BidafBaseline/scripts/__pycache__/
 *.pyc
-
+*.DS_Store
+*~
+.vs/*
+*.pyproj
+*.sln
+*private*
+test*

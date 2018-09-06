@@ -170,7 +170,7 @@ class BleuScorer(object):
             self.crefs.extend(other.crefs)
             self._score = None ## need to recompute
 
-        return self        
+        return self
 
     def compatible(self, other):
         return isinstance(other, BleuScorer) and self.n == other.n
