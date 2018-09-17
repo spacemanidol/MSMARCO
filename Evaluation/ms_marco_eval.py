@@ -160,7 +160,7 @@ def compute_metrics_from_files(p_path_to_reference_file,
     bleu = [0,0,0,0]
     rouge_score = 0
     rouge = Rouge()
-    smoothie = SmoothingFunction().method4
+    smoothie = SmoothingFunction().method0
 
     for key in reference_dictionary:
         candidate_answer = remove_punctuation(candidate_dictionary[key][0])
@@ -182,7 +182,7 @@ def compute_metrics_from_files(p_path_to_reference_file,
                     candidate_values[1] = rouge.get_scores(candidate_answer, reference_answer)[0]['rouge-l']['f']
                     candidate_values[2] = sentence_bleu(reference_answer, candidate_answer, weights=(1, 0, 0, 0), smoothing_function=smoothie)
                     candidate_values[3] = sentence_bleu(reference_answer, candidate_answer, weights=(0.5,0.5,0,0), smoothing_function=smoothie)
-                    candidate_values[4] = sentence_bleu(reference_answer, candidate_answer, weights=(0.33,0.33,0.33,0), smoothing_function=smoothie)
+                    candidate_values[4] = sentence_bleu(reference_answer, candidate_answer, weights=(1/3.0,1/3.0,1/3.0,0), smoothing_function=smoothie)
                     candidate_values[5] = sentence_bleu(reference_answer, candidate_answer, weights=(0.25,0.25,0.25,0.25), smoothing_function=smoothie)
                     #partial credit for yes/no when complete answer is a yes/no question
                     if (candidate_answer == 'yes' and reference_answer[0:3] == candidate_answer) or (candidate_answer == 'no'and reference_answer[0:2] == candidate_answer):
