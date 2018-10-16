@@ -1,11 +1,10 @@
 """
 This module computes evaluation metrics for MS MaRCo data set.
-
 Command line:
-/ms_marco_metrics$ python ms_marco_eval.py <path_to_reference_file> <path_to_candidate_file>
+/ms_marco_metrics$ python3 ms_marco_eval.py <path_to_reference_file> <path_to_candidate_file>
 
 Creation Date : 12/15/2016
-Last Modified : 07/06/2018
+Last Modified : 10/16/2018
 Authors : Tri Nguyen <trnguye@microsoft.com>, Xia Song <xiaso@microsoft.com>, Tong Wang <tongw@microsoft.com>, Daniel Campos <dacamp@microsoft.com>
 """
 
@@ -45,7 +44,6 @@ def normalize_batch(p_iter, p_batch_size=1000, p_thread_count=5):
     Returns:
     iter: iter over normalized and tokenized string.
     """
-
     global NLP
     if not NLP:
         NLP = NlpEnglish(parser=False)
@@ -90,13 +88,11 @@ def load_file(p_path_to_data):
                 '\"%s\" json does not have \"%s\" field' % \
                     (line, QUERY_ID_JSON_ID)
             query_id = json_object[QUERY_ID_JSON_ID]
-
             assert \
                 ANSWERS_JSON_ID in json_object, \
                 '\"%s\" json does not have \"%s\" field' % \
                     (line, ANSWERS_JSON_ID)   
             answers = json_object[ANSWERS_JSON_ID]
-
             if 'No Answer Present.' in answers:
                 no_answer_query_ids.add(query_id)
             else:
@@ -161,10 +157,9 @@ def compute_metrics_from_files(p_path_to_reference_file,
     rouge_score = 0
     rouge = Rouge()
     smoothie = SmoothingFunction().method0
-
     for key in reference_dictionary:
         candidate_answer = remove_punctuation(candidate_dictionary[key][0])
-        nlp_candidate_answer = nlp(candidate_answer)
+        #nlp_candidate_answer = nlp(candidate_answer)
         reference_answers = reference_dictionary[key]
         candidate_values = [0,0,0,0,0,0]
         selected_values = [0,0,0,0,0,0]
@@ -178,7 +173,8 @@ def compute_metrics_from_files(p_path_to_reference_file,
                             selected_values[i] += 1
                 else:
                     reference_split = reference_answer.split(',')
-                    candidate_values[0] = nlp_candidate_answer.similarity(nlp(reference_answer))
+                    #candidate_values[0] = nlp_candidate_answer.similarity(nlp(reference_answer))
+                    candidate_values[0] = 0 
                     candidate_values[1] = rouge.get_scores(candidate_answer, reference_answer)[0]['rouge-l']['f']
                     candidate_values[2] = sentence_bleu(reference_answer, candidate_answer, weights=(1, 0, 0, 0), smoothing_function=smoothie)
                     candidate_values[3] = sentence_bleu(reference_answer, candidate_answer, weights=(0.5,0.5,0,0), smoothing_function=smoothie)
@@ -200,14 +196,14 @@ def compute_metrics_from_files(p_path_to_reference_file,
     
     all_scores = {}
     all_scores['F1'] = F1
-    all_scores['Semantic_Similarity'] = (semantic_similarity/len(reference_dictionary))
+    #all_scores['Semantic_Similarity'] = (semantic_similarity/len(reference_dictionary))
     all_scores['rouge_l'] = (rouge_score/len(reference_dictionary))
     for i in range(0,4):
         all_scores['bleu_%d' % (i+1)] = (bleu[i]/len(reference_dictionary))
     return all_scores
 
 def main():
-    """Command line: /ms_marco_metrics$ PYTHONPATH=./bleu python ms_marco_eval.py <path_to_reference_file> <path_to_candidate_file>"""
+    """Command line: /ms_marco_metrics$ python3 ms_marco_eval.py <path_to_reference_file> <path_to_candidate_file>"""
 
     path_to_reference_file = sys.argv[1]
     path_to_candidate_file = sys.argv[2]

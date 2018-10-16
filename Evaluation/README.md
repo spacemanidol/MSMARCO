@@ -10,6 +10,15 @@ Evaluation codes for MS MaRCo (Microsoft MAchine Reading COmprehension Dataset).
 - Rouge: https://pypi.org/project/rouge/
 
 ## Instructions ##
+Install all the depencencies 
+'''
+sudo apt-get install python3-dev
+sudo pip install -U spacy
+sudo python3 -m spacy download en
+sudo python3 -m spacy download en_core_web_lg
+sudo pip install -U nltk
+sudo pip install rouge
+'''
 Execute run.sh from /ms_marco_metrics/ in command line:
 /ms_marco_metrics$ python ms_marco_eval.py <path to reference json file> <path to candidate json file>
 Example:
