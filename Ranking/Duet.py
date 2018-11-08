@@ -11,6 +11,28 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+DATA_DIR                        = '/home/erasmus/Documents/Ranking'
+DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"), if you want to run on CPU instead
+ARCH_TYPE                       = 2
+MAX_QUERY_TERMS                 = 20
+MAX_DOC_TERMS                   = 200
+NUM_HIDDEN_NODES                = 512
+TERM_WINDOW_SIZE                = 3
+POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
+POOLING_KERNEL_WIDTH_DOC        = 100
+NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
+NUM_NGRAPHS                     = 0
+DROPOUT_RATE                    = 0.5
+MB_SIZE                         = 1024 #1024
+EPOCH_SIZE                      = 256 #1024
+NUM_EPOCHS                      = 1
+LEARNING_RATE                   = 1e-3
+DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
+DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
+DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.small.tsv")
+DATA_FILE_DEV                   = os.path.join(DATA_DIR, "top1000.dev.tsv")
+QRELS_DEV                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
+DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 
 def print_message(s):
     print("[{}] {}".format(datetime.datetime.utcnow().strftime("%b %d, %H:%M:%S"), s), flush=True)
@@ -246,95 +268,76 @@ class Duet(torch.nn.Module):
     def parameter_count(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"), if you want to run on CPU instead
-ARCH_TYPE                       = 2
-MAX_QUERY_TERMS                 = 20
-MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 512
-TERM_WINDOW_SIZE                = 3
-POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
-POOLING_KERNEL_WIDTH_DOC        = 100
-NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
-NUM_NGRAPHS                     = 0
-DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 1024 #1024
-EPOCH_SIZE                      = 256 #1024
-NUM_EPOCHS                      = 64
-LEARNING_RATE                   = 1e-3
-DATA_DIR                        = '/home/erasmus/Documents/Official Data/Ranking'
-DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
-DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
-DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.small.tsv")
-DATA_FILE_DEV                   = os.path.join(DATA_DIR, "top1000.dev.tsv")
-QRELS_DEV                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
+def main():
+    READER_TRAIN                    = DataReader(DATA_FILE_TRAIN, 0, True)
+    READER_DEV                      = DataReader(DATA_FILE_DEV, 2, False)
+    qrels                           = {}
+    with open(QRELS_DEV, mode='r', encoding="utf-8") as f:
+        reader                      = csv.reader(f, delimiter='\t')
+        for row in reader:
+            qid                     = int(row[0])
+            did                     = int(row[2])
+            if qid not in qrels:
+                qrels[qid]          = []
+            qrels[qid].append(did)
 
-READER_TRAIN                    = DataReader(DATA_FILE_TRAIN, 0, True)
-READER_DEV                      = DataReader(DATA_FILE_DEV, 2, False)
+    scores                          = {}
+    for qid in qrels.keys():
+        scores[qid]                 = {}
 
-qrels                           = {}
-with open(QRELS_DEV, mode='r', encoding="utf-8") as f:
-    reader                      = csv.reader(f, delimiter='\t')
-    for row in reader:
-        qid                     = int(row[0])
-        did                     = int(row[2])
-        if qid not in qrels:
-            qrels[qid]          = []
-        qrels[qid].append(did)
+    torch.manual_seed(1)
+    print_message('Starting')
+    net                     = Duet()
+    net                     = net.to(DEVICE)
+    criterion               = nn.CrossEntropyLoss()
+    optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
+    print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
+    for ep_idx in range(NUM_EPOCHS):
+        train_loss          = 0.0
+        for docs in scores.values():
+            docs.clear()
+        net.train()
+        for mb_idx in range(EPOCH_SIZE):
+            features        = READER_TRAIN.get_minibatch()
+            if ARCH_TYPE == 0:
+                out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), None, None) for i in range(READER_TRAIN.num_docs)]), 1)
+            elif ARCH_TYPE == 1:
+                out         = torch.cat(tuple([net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
+            else:
+                out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
+            loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            train_loss     += loss.item()
+        is_complete         = False
+        READER_DEV.reset()
+        net.eval()
+        while not is_complete:
+            features        = READER_DEV.get_minibatch()
+            if ARCH_TYPE == 0:
+                out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), None, None)
+            elif ARCH_TYPE == 1:
+                out         = net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+            else:
+                out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+            meta_cnt        = len(features['meta'])
+            out             = out.data.cpu()
+            for i in range(meta_cnt):
+                q           = int(features['meta'][i][0])
+                d           = int(features['meta'][i][1])
+                scores[q][d]= out[i][0]
+            is_complete     = (meta_cnt < MB_SIZE)
+        mrr                 = 0
+        for qid, docs in scores.items():
+            ranked          = sorted(docs, key=docs.get, reverse=True)
+            for i in range(len(ranked)):
+                if ranked[i] in qrels[qid]:
+                    mrr    += 1 / (i + 1)
+                    break
+        mrr                /= len(qrels)
+        print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
+    print_message('Finished')
 
-scores                          = {}
-for qid in qrels.keys():
-    scores[qid]                 = {}
-
-torch.manual_seed(1)
-print_message('Starting')
-net                     = Duet()
-net                     = net.to(DEVICE)
-criterion               = nn.CrossEntropyLoss()
-optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
-print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
-for ep_idx in range(NUM_EPOCHS):
-    train_loss          = 0.0
-    for docs in scores.values():
-        docs.clear()
-    net.train()
-    for mb_idx in range(EPOCH_SIZE):
-        features        = READER_TRAIN.get_minibatch()
-        if ARCH_TYPE == 0:
-            out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), None, None) for i in range(READER_TRAIN.num_docs)]), 1)
-        elif ARCH_TYPE == 1:
-            out         = torch.cat(tuple([net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
-        else:
-            out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
-        loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        train_loss     += loss.item()
-    is_complete         = False
-    READER_DEV.reset()
-    net.eval()
-    while not is_complete:
-        features        = READER_DEV.get_minibatch()
-        if ARCH_TYPE == 0:
-            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), None, None)
-        elif ARCH_TYPE == 1:
-            out         = net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
-        else:
-            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
-        meta_cnt        = len(features['meta'])
-        out             = out.data.cpu()
-        for i in range(meta_cnt):
-            q           = int(features['meta'][i][0])
-            d           = int(features['meta'][i][1])
-            scores[q][d]= out[i][0]
-        is_complete     = (meta_cnt < MB_SIZE)
-    mrr                 = 0
-    for qid, docs in scores.items():
-        ranked          = sorted(docs, key=docs.get, reverse=True)
-        for i in range(len(ranked)):
-            if ranked[i] in qrels[qid]:
-                mrr    += 1 / (i + 1)
-                break
-    mrr                /= len(qrels)
-    print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
-print_message('Finished')
+if __name__ == '__main__':
+    main()
