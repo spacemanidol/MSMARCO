@@ -160,7 +160,31 @@ def main():
                            "when generating random word representations.")
 
     args = argparser.parse_args()
-
+    net.eval()
+    while not is_complete:
+        features        = READER_DEV.get_minibatch()
+        if ARCH_TYPE == 0:
+            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), None, None)
+        elif ARCH_TYPE == 1:
+            out         = net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+        else:
+            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+        meta_cnt        = len(features['meta'])
+        out             = out.data.cpu()
+        for i in range(meta_cnt):
+            q           = int(features['meta'][i][0])
+            d           = int(features['meta'][i][1])
+            scores[q][d]= out[i][0]
+        is_complete     = (meta_cnt < MB_SIZE)
+    mrr                 = 0
+    for qid, docs in scores.items():
+        ranked          = sorted(docs, key=docs.get, reverse=True)
+        for i in range(len(ranked)):
+            if ranked[i] in qrels[qid]:
+                mrr    += 1 / (i + 1)
+                break
+    mrr                /= len(qrels)
+    print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
     config_filepath = os.path.join(args.exp_folder, 'config.yaml')
     with open(config_filepath) as f:
         config = yaml.load(f)
@@ -183,7 +207,5 @@ def main():
             print(repr(qid), repr(toks), start, end, file=f_o)
 
     return
-
-
 if __name__ == '__main__':
     main()
