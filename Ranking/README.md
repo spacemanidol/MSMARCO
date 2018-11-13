@@ -7,18 +7,18 @@ To generate the ranking task dataset we started with the regular MSMARCO dataset
 Then, the existing dataset has an annotation of is_selected:1 if a judge used a passage to generate their answer. We consider these as a ranking signla where all passages that have a value of 1 are a true possitive for query relevance for that given passage. Any passage that has a value of 0 is not a true negative. 
 ### Data, information, and Formating
 Given that all files have been generated from the v2.1 dataset meaning that in theory anyone can generate the files we provide to their own specifications and liking.
-####Passage to PassageID
+#### Passage to PassageID
 
-####Query to QueryID
+#### Query to QueryID
 This has been split for Train, Dev and Eval. 
-####Relevant Passages
+#### Relevant Passages
 We are releasing the Train and Dev
-####Triples.Train
+#### Triples.Train
 The triples.train.<size>.tsv are two files that we have created as an easy to consume training dataset. Each line of the TSV contains querytext, A relevant passage, and an non-relevant passage all separated by '\t'. The only difference between triples.train.full.tsv and triples.train.small.tsv is the smaller is ~10% of the overall size since the full sized train is > 270gbs.
 '''
 what fruit is native to australia       Passiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.assiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.   The kola nut is the fruit of the kola tree, a genus (Cola) of trees that are native to the tropical rainforests of Africa.
 '''
-####Top1000
+#### Top1000
 We have produced the Top1000 for Dev and for Eval
 ### Evaluation
 Evaluation of systems will be done using MRR@10. We have selected such a low MRR number because the sizes of files candidates need to create quickly balloon with each additional depth. Official evaluation scripts and samples are availible [Here](https://github.com/dfcf93/MSMARCOV2/tree/master/Ranking/Evaluation).
