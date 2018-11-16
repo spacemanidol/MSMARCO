@@ -10,6 +10,7 @@ duet:
     num_ngraphs: 0
     learning_rate: 0.001
 training:
+    device: 'torch.device(\"cuda:0\")'
     mb_size: 1024
     num_epochs: 1
     epoch_size: 1024
