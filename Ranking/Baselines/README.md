@@ -10,7 +10,12 @@ numpy
 ## Setup
 1. Download all the MSMARCO ranking files into your datadir
 2. Use the existing normalized idf or generate your own normalized idf values using something like our makeidf.py script or any other system you would like.
-3. Modify the duet.py script so that DATA_DIR now includes the following: ngraphs.txt, idf.norm.tsv, triples.train.sample.tsv, top1000.dev.tsv qrel.dev.tsv
+3. We suggest you use [Conda](https://conda.io/docs/) to create enviroments. Doing so go ahead and create a new enviroment
+'''
+conda create --name msmarcoranking python=3.6 --file req.txt
+source activate msmarcoranking
+'''
+Modify the duet.py script so that DATA_DIR now includes the following: ngraphs.txt, idf.norm.tsv, triples.train.sample.tsv, top1000.dev.tsv qrel.dev.tsv
 4. Confirm your enviorment has everything necessary and run duet.py if the model finishes then raise the epoch count to whatever train period you desire. 
 
 

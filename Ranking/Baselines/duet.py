@@ -14,7 +14,6 @@ import torch.optim as optim
 def print_message(s):
     print("[{}] {}".format(datetime.datetime.utcnow().strftime("%b %d, %H:%M:%S"), s), flush=True)
 class DataReader:
-
     def __init__(self, data_file, num_meta_cols, multi_pass):
         self.num_meta_cols                  = num_meta_cols
         self.multi_pass                     = multi_pass
@@ -24,10 +23,8 @@ class DataReader:
         self.__load_idfs()
         self.__init_data(data_file)
         self.__allocate_minibatch()
-
     def __tokenize(self, s, max_terms):
         return self.regex_multi_space.sub(' ', self.regex_drop_char.sub(' ', s.lower())).strip().split()[:max_terms]
-
     def __load_ngraphs(self):
         global NUM_NGRAPHS
         self.ngraphs                        = {}
@@ -37,20 +34,17 @@ class DataReader:
             for row in reader:
                 self.ngraphs[row[0]]        = int(row[1]) - 1
                 self.max_ngraph_len         = max(self.max_ngraph_len, len(row[0]))
-        NUM_NGRAPHS                         = len(self.ngraphs)
-        
+        NUM_NGRAPHS                         = len(self.ngraphs)        
     def __load_idfs(self):
         self.idfs                           = {}
         with open(DATA_FILE_IDFS, mode='r', encoding="utf-8") as f:
             reader                          = csv.reader(f, delimiter='\t')
             for row in reader:
                 self.idfs[row[0]]           = float(row[1])
-
     def __init_data(self, file_name):
         self.reader                         = open(file_name, mode='r', encoding="utf-8")
         self.num_docs                       = len(self.reader.readline().split('\t')) - self.num_meta_cols - 1
-        self.reader.seek(0)
-    
+        self.reader.seek(0)    
     def __allocate_minibatch(self):
         self.features                       = {}
         if ARCH_TYPE != 1:
@@ -64,8 +58,7 @@ class DataReader:
             if ARCH_TYPE > 0:
                 self.features['dist_d'].append(np.zeros((MB_SIZE, NUM_NGRAPHS, MAX_DOC_TERMS), dtype=np.float32))
         self.features['labels']             = np.zeros((MB_SIZE), dtype=np.int64)
-        self.features['meta']               = []
-        
+        self.features['meta']               = []        
     def __clear_minibatch(self):
         if ARCH_TYPE > 0:
             self.features['dist_q'].fill(np.float32(0))
@@ -75,7 +68,6 @@ class DataReader:
             if ARCH_TYPE > 0:
                 self.features['dist_d'][i].fill(np.float32(0))
         self.features['meta'].clear()
-
     def get_minibatch(self):
         self.__clear_minibatch()
         for i in range(MB_SIZE):
@@ -112,7 +104,6 @@ class DataReader:
                                             self.features['dist_d'][j - 1][i, ngraph_idx, t] += 1
             self.features['meta'].append(tuple(cols[:self.num_meta_cols]))
         return self.features
-
     def get_minibatch2(self):
         self.__clear_minibatch()
         prev_d = []
@@ -156,7 +147,6 @@ class DataReader:
                                             self.features['dist_d'][j - 1][i, ngraph_idx, t] += 1
             prev_d = d
             self.features['meta'].append(tuple(cols[:self.num_meta_cols]))
-        
         if ARCH_TYPE != 1:
             for j in range(len(prev_d)):
                 for k in range(len(first_q)):
@@ -174,19 +164,16 @@ class DataReader:
                             if ngraph_idx != None:
                                     self.features['dist_d'][1][0, ngraph_idx, t] += 1
         return self.features
-    
     def reset(self):
         self.reader.seek(0)
 
 class Flatten(nn.Module):
     def __init__(self):
         super(Flatten, self).__init__()
-
     def forward(self, x):
         return x.view(x.size(0), -1)
 
 class Duet(torch.nn.Module):
-    
     def __init__(self):
         super(Duet, self).__init__()
         self.duet_local             = nn.Sequential(nn.Conv1d(MAX_DOC_TERMS, NUM_HIDDEN_NODES, kernel_size=1),
@@ -198,9 +185,7 @@ class Duet(torch.nn.Module):
                                         nn.Dropout(p=DROPOUT_RATE),
                                         nn.Linear(NUM_HIDDEN_NODES, NUM_HIDDEN_NODES),
                                         nn.Tanh(),
-                                        nn.Dropout(p=DROPOUT_RATE))#,
-                                        #nn.Linear(NUM_HIDDEN_NODES, 1),
-                                        #nn.Tanh())
+                                        nn.Dropout(p=DROPOUT_RATE))
         self.duet_dist_q            = nn.Sequential(nn.Conv1d(NUM_NGRAPHS, NUM_HIDDEN_NODES, kernel_size=3),
                                         nn.Tanh(),
                                         nn.MaxPool1d(POOLING_KERNEL_WIDTH_QUERY),
@@ -219,9 +204,7 @@ class Duet(torch.nn.Module):
                                         nn.Dropout(p=DROPOUT_RATE),
                                         nn.Linear(NUM_HIDDEN_NODES, NUM_HIDDEN_NODES),
                                         nn.Tanh(),
-                                        nn.Dropout(p=DROPOUT_RATE))#,
-                                        #nn.Linear(NUM_HIDDEN_NODES, 1),
-                                        #nn.Tanh())
+                                        nn.Dropout(p=DROPOUT_RATE))
         self.duet_comb              = nn.Sequential(nn.Linear(NUM_HIDDEN_NODES, NUM_HIDDEN_NODES),
                                         nn.Tanh(),
                                         nn.Dropout(p=DROPOUT_RATE),
@@ -230,7 +213,6 @@ class Duet(torch.nn.Module):
                                         nn.Dropout(p=DROPOUT_RATE),
                                         nn.Linear(NUM_HIDDEN_NODES, 1),
                                         nn.Tanh())
-
     def forward(self, x_local, x_dist_q, x_dist_d):
         if ARCH_TYPE != 1:
             h_local                 = self.duet_local(x_local)
@@ -240,16 +222,15 @@ class Duet(torch.nn.Module):
             h_dist                  = self.duet_dist(h_dist_q.unsqueeze(-1)*h_dist_d)
         y_score                     = self.duet_comb((h_local + h_dist) if ARCH_TYPE == 2 else (h_dist if ARCH_TYPE == 1 else h_local))
         return y_score
-    
     def parameter_count(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 
-DEVICE                          = torch.device("cuda:1")    # torch.device("cpu"), if you want to run on CPU instead
+DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"), if you want to run on CPU instead
 ARCH_TYPE                       = 2
 MAX_QUERY_TERMS                 = 20
 MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 512
+NUM_HIDDEN_NODES                = 128
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
@@ -260,10 +241,10 @@ MB_SIZE                         = 1024 #1024
 EPOCH_SIZE                      = 256 #1024
 NUM_EPOCHS                      = 1
 LEARNING_RATE                   = 1e-3
-DATA_DIR                        = 'F:\\bmitra\\data\\msmarco\\'
+DATA_DIR                        = 'DataDir'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
-DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.sample.tsv")
+DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.small.tsv")
 DATA_FILE_DEV                   = os.path.join(DATA_DIR, "top1000.dev.tsv")
 QRELS_DEV                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
@@ -325,15 +306,16 @@ for ep_idx in range(NUM_EPOCHS):
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
-            scores[q][d]= out[i][0]
-        is_complete     = (meta_cnt < MB_SIZE)
-    mrr                 = 0
-    for qid, docs in scores.items():
-        ranked          = sorted(docs, key=docs.get, reverse=True)
-        for i in range(len(ranked)):
-            if ranked[i] in qrels[qid]:
-                mrr    += 1 / (i + 1)
-                break
+            if q in scores:
+                scores[q][d]= out[i][0]
+            is_complete     = (meta_cnt < MB_SIZE)
+        mrr                 = 0
+        for qid, docs in scores.items():
+            ranked          = sorted(docs, key=docs.get, reverse=True)
+            for i in range(len(ranked)):
+                if ranked[i] in qrels[qid]:
+                    mrr    += 1 / (i + 1)
+                    break  
     mrr                /= len(qrels)
     print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
 print_message('Finished')
