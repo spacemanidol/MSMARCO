@@ -230,7 +230,7 @@ DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"
 ARCH_TYPE                       = 2
 MAX_QUERY_TERMS                 = 20
 MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 512 #1024
+NUM_HIDDEN_NODES                = 1024
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
@@ -238,7 +238,7 @@ NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLI
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
 MB_SIZE                         = 256
-EPOCH_SIZE                      = 256 #1024
+EPOCH_SIZE                      = 1024
 NUM_EPOCHS                      = 10
 LEARNING_RATE                   = 1e-3
 DATA_DIR                        = 'DataDir'
