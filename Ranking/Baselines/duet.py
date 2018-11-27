@@ -230,16 +230,16 @@ DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"
 ARCH_TYPE                       = 2
 MAX_QUERY_TERMS                 = 20
 MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 128
+NUM_HIDDEN_NODES                = 512 #1024
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
 NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 1024 #1024
+MB_SIZE                         = 256
 EPOCH_SIZE                      = 256 #1024
-NUM_EPOCHS                      = 1
+NUM_EPOCHS                      = 10
 LEARNING_RATE                   = 1e-3
 DATA_DIR                        = 'DataDir'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
@@ -303,12 +303,13 @@ for ep_idx in range(NUM_EPOCHS):
             out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
         meta_cnt        = len(features['meta'])
         out             = out.data.cpu()
+        print(meta_cnt)
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
             if q in scores:
                 scores[q][d]= out[i][0]
-            is_complete     = (meta_cnt < MB_SIZE)
+            is_complete     = (meta_cnt <= MB_SIZE)
         mrr                 = 0
         for qid, docs in scores.items():
             ranked          = sorted(docs, key=docs.get, reverse=True)
