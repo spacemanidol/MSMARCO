@@ -4,7 +4,7 @@ Command line:
 python msmarco_eval_ranking.py <path_to_reference_file> <path_to_candidate_file>
 
 Creation Date : 06/12/2018
-Last Modified : 07/05/2018
+Last Modified : 11/28/2018
 Authors : Daniel Campos <dacamp@microsoft.com>, Rutger van Haasteren <ruvanh@microsoft.com>
 """
 import sys
@@ -28,7 +28,7 @@ def load_reference_from_stream(f):
                 pass
             else:
                 qids_to_relevant_passageids[qid] = []
-            qids_to_relevant_passageids[qid].append(int(l[1]))
+            qids_to_relevant_passageids[qid].append(int(l[2]))
         except:
             raise IOError('\"%s\" is not valid format' % l)
     return qids_to_relevant_passageids
@@ -92,16 +92,6 @@ def quality_checks_qids(qids_to_relevant_passageids, qids_to_ranked_candidate_pa
     candidate_set = set(qids_to_ranked_candidate_passages.keys())
     ref_set = set(qids_to_relevant_passageids.keys())
 
-    # Check whether the queries match the evaluation set
-    if candidate_set != ref_set:
-        if candidate_set >= ref_set:
-            # This is to be expected, since we have split the evaluation set in validation & test
-            pass
-        elif candidate_set < ref_set:
-            message = "Not all queries seem to be ranked. Are you scoring the right set?"
-        else:
-            message = "The submitted queries do not fully match the queries in the evaluation set. Are you scoring the right set?"
-
     # Check that we do not have multiple passages per query
     for qid in qids_to_ranked_candidate_passages:
         # Remove all zeros from the candidates
@@ -145,9 +135,6 @@ def compute_metrics(qids_to_relevant_passageids, qids_to_ranked_candidate_passag
     MRR = MRR/len(ranking)
     all_scores['MRR'] = MRR
     all_scores['QueriesRanked'] = len(ranking)
-    all_scores['AverageRankGoldLabel'] = statistics.mean(ranking)
-    all_scores['MedianRankGoldLabel'] = statistics.median(ranking)
-    all_scores['HarmonicMeanRankingGoldLabel'] = statistics.harmonic_mean(ranking)
     return all_scores
                 
 def compute_metrics_from_files(path_to_reference, path_to_candidate, perform_checks=True):

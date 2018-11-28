@@ -10,9 +10,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
 def print_message(s):
     print("[{}] {}".format(datetime.datetime.utcnow().strftime("%b %d, %H:%M:%S"), s), flush=True)
+
+
 class DataReader:
     def __init__(self, data_file, num_meta_cols, multi_pass):
         self.num_meta_cols                  = num_meta_cols
@@ -86,7 +87,10 @@ class DataReader:
                     for j in range(len(ds[d])):
                         for k in range(len(q)):
                             if ds[d][j] == q[k]:
-                                self.features['local'][d][i, j, k] = self.idfs[q[k]]
+                                if q[k] in self.idfs:
+                                    self.features['local'][d][i, j, k] = self.idfs[q[k]]
+                                else:
+                                    self.features['local'][d][i, j, k] = 0
             if ARCH_TYPE > 0:
                 for j in range(self.num_docs + 1):
                     terms = q if j == 0 else ds[j - 1]
@@ -125,11 +129,17 @@ class DataReader:
                 for j in range(len(d)):
                     for k in range(len(q)):
                         if d[j] == q[k]:
-                            self.features['local'][0][i, j, k] = self.idfs[q[k]]
+                            if q[k] in self.idfs:
+                                self.features['local'][0][i, j, k] = self.idfs[q[k]]
+                            else:
+                                self.features['local'][0][i, j, k] = 0
                 for j in range(len(prev_d)):
                     for k in range(len(q)):
                         if prev_d[j] == q[k]:
-                            self.features['local'][1][i, j, k] = self.idfs[q[k]]
+                            if q[k] in self.idfs:
+                                self.features['local'][1][i, j, k] = self.idfs[q[k]]
+                            else:
+                                self.features['local'][1][i, j, k] = 0
             if ARCH_TYPE > 0:
                 for j in range(self.num_docs + 1):
                     terms = q if j == 0 else (d if j == 1 else prev_d)
@@ -151,7 +161,10 @@ class DataReader:
             for j in range(len(prev_d)):
                 for k in range(len(first_q)):
                     if prev_d[j] == first_q[k]:
-                        self.features['local'][1][0, j, k] = self.idfs[q[k]]
+                        if q[k] in self.idfs:
+                            self.features['local'][1][0, j, k] = self.idfs[q[k]]
+                        else:
+                            self.features['local'][1][0, j, k] = 0
         if ARCH_TYPE > 0:
             terms = prev_d
             for t in range(len(terms)):
@@ -167,11 +180,13 @@ class DataReader:
     def reset(self):
         self.reader.seek(0)
 
+
 class Flatten(nn.Module):
     def __init__(self):
         super(Flatten, self).__init__()
     def forward(self, x):
         return x.view(x.size(0), -1)
+
 
 class Duet(torch.nn.Module):
     def __init__(self):
@@ -228,9 +243,9 @@ class Duet(torch.nn.Module):
 
 DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"), if you want to run on CPU instead
 ARCH_TYPE                       = 2
-MAX_QUERY_TERMS                 = 20
-MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 1024
+MAX_QUERY_TERMS                 = 80
+MAX_DOC_TERMS                   = 400
+NUM_HIDDEN_NODES                = 512
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
@@ -238,32 +253,53 @@ NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLI
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
 MB_SIZE                         = 256
-EPOCH_SIZE                      = 1024
-NUM_EPOCHS                      = 10
-LEARNING_RATE                   = 1e-3
+EPOCH_SIZE                      = 256
+NUM_EPOCHS                      = 2 #500
+LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'DataDir'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
 DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.small.tsv")
 DATA_FILE_DEV                   = os.path.join(DATA_DIR, "top1000.dev.tsv")
+DATA_FILE_EVAL                   = os.path.join(DATA_DIR, "top1000.eval.tsv")
 QRELS_DEV                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
-
+QRELS_EVAL                      = os.path.join(DATA_DIR, "qrels.eval.tsv")
 READER_TRAIN                    = DataReader(DATA_FILE_TRAIN, 0, True)
 READER_DEV                      = DataReader(DATA_FILE_DEV, 2, False)
+READER_EVAL                      = DataReader(DATA_FILE_EVAL, 2, False)
+
 
 qrels                           = {}
 with open(QRELS_DEV, mode='r', encoding="utf-8") as f:
     reader                      = csv.reader(f, delimiter='\t')
     for row in reader:
         qid                     = int(row[0])
-        did                     = int(row[1])
+        did                     = int(row[2])
         if qid not in qrels:
             qrels[qid]          = []
         qrels[qid].append(did)
 
+
 scores                          = {}
 for qid in qrels.keys():
     scores[qid]                 = {}
+
+
+qrelseval                           = {}
+with open(QRELS_EVAL, mode='r', encoding="utf-8") as f:
+    reader                      = csv.reader(f, delimiter='\t')
+    for row in reader:
+        qid                     = int(row[0])
+        did                     = int(row[2])
+        if qid not in qrelseval:
+            qrelseval[qid]          = []
+        qrelseval[qid].append(did)
+
+
+scoreseval                          = {}
+for qid in qrelseval.keys():
+    scoreseval  [qid]                 = {}
+
 
 torch.manual_seed(1)
 print_message('Starting')
@@ -273,37 +309,27 @@ criterion               = nn.CrossEntropyLoss()
 optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
 for ep_idx in range(NUM_EPOCHS):
-    train_loss          = 0.0
-    for docs in scores.values():
-        docs.clear()
-    net.train()
-    for mb_idx in range(EPOCH_SIZE):
-        features        = READER_TRAIN.get_minibatch()
-        if ARCH_TYPE == 0:
-            out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), None, None) for i in range(READER_TRAIN.num_docs)]), 1)
-        elif ARCH_TYPE == 1:
-            out         = torch.cat(tuple([net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
-        else:
-            out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
-        loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        train_loss     += loss.item()
-    is_complete         = False
-    READER_DEV.reset()
+print_message("Starting training round {}".format(ep_idx))
+train_loss          = 0.0
+for docs in scores.values():
+    docs.clear()
+net.train()
+for mb_idx in range(EPOCH_SIZE):
+    features        = READER_TRAIN.get_minibatch()
+    out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
+    loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    train_loss     += loss.item()
+is_complete         = False
+READER_DEV.reset()
     net.eval()
+    print_message("Starting evaluation round Dev {}".format(ep_idx))
     while not is_complete:
         features        = READER_DEV.get_minibatch()
-        if ARCH_TYPE == 0:
-            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), None, None)
-        elif ARCH_TYPE == 1:
-            out         = net(None, torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
-        else:
-            out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+        out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
         meta_cnt        = len(features['meta'])
-        out             = out.data.cpu()
-        print(meta_cnt)
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
@@ -317,6 +343,29 @@ for ep_idx in range(NUM_EPOCHS):
                 if ranked[i] in qrels[qid]:
                     mrr    += 1 / (i + 1)
                     break  
-    mrr                /= len(qrels)
+    mrr                /= len(scores)
+    is_complete = False
+    READER_EVAL.reset()
+    net.eval()
     print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
-print_message('Finished')
+    print_message("Starting evaluation round Eval {}".format(ep_idx))
+    while not is_complete:
+        features        = READER_EVAL.get_minibatch()
+        out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+        meta_cnt        = len(features['meta'])
+        for i in range(meta_cnt):
+            q           = int(features['meta'][i][0])
+            d           = int(features['meta'][i][1])
+            if q in scoreseval:
+                scoreseval[q][d]= out[i][0]
+            is_complete     = (meta_cnt <= MB_SIZE)
+        mrr                 = 0
+        for qid, docs in scoreseval.items():
+            ranked          = sorted(docs, key=docs.get, reverse=True)
+            for i in range(len(ranked)):
+                if ranked[i] in qrelseval[qid]:
+                    mrr    += 1 / (i + 1)
+                    break  
+    mrr                /= len(scoreseval)
+    print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
+print_message('Finished Training')
