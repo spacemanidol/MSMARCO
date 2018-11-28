@@ -2,14 +2,14 @@ import math
 import re
 import sys
 
-MAX_QUERY_TERMS = 20
-MAX_DOC_TERMS = 200
+MAX_QUERY_TERMS = 80
+MAX_DOC_TERMS = 400
 regex_drop_char = re.compile('[^a-z0-9\s]+')
 regex_multi_space = re.compile('\s+')
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: makeidf.py <train_triples_filename> <dev_rerank_filename> <passage_collections_filename>")
+    if len(sys.argv) != 5:
+        print("Usage: makeidf.py <train_triples_filename> <dev_rerank_filename> <eval_rerank_filename> <passage_collections_filename>")
         exit(-1)
     else:
         df = {}
@@ -25,6 +25,11 @@ if __name__ == "__main__":
                 for t in regex_multi_space.sub(' ', regex_drop_char.sub(' ', cols[2].lower())).strip().split()[:MAX_QUERY_TERMS]:
                     df[t] = 0
         with open(sys.argv[3], encoding = 'utf-8', mode='r') as reader:
+            for line in reader:
+                cols = line.split('\t')
+                for t in regex_multi_space.sub(' ', regex_drop_char.sub(' ', cols[2].lower())).strip().split()[:MAX_QUERY_TERMS]:
+                    df[t] = 0
+        with open(sys.argv[4], encoding = 'utf-8', mode='r') as reader:
             for line in reader:
                 cols = line.split('\t')
                 for t in set(regex_multi_space.sub(' ', regex_drop_char.sub(' ', cols[1].lower())).strip().split()[:MAX_DOC_TERMS]):
