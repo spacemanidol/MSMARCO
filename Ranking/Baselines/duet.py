@@ -243,8 +243,8 @@ class Duet(torch.nn.Module):
 
 DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"), if you want to run on CPU instead
 ARCH_TYPE                       = 2
-MAX_QUERY_TERMS                 = 80
-MAX_DOC_TERMS                   = 400
+MAX_QUERY_TERMS                 = 20
+MAX_DOC_TERMS                   = 200
 NUM_HIDDEN_NODES                = 512
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
@@ -252,9 +252,9 @@ POOLING_KERNEL_WIDTH_DOC        = 100
 NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 256
+MB_SIZE                         = 128
 EPOCH_SIZE                      = 256
-NUM_EPOCHS                      = 2 #500
+NUM_EPOCHS                      = 500
 LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'DataDir'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
@@ -309,21 +309,21 @@ criterion               = nn.CrossEntropyLoss()
 optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
 for ep_idx in range(NUM_EPOCHS):
-print_message("Starting training round {}".format(ep_idx))
-train_loss          = 0.0
-for docs in scores.values():
-    docs.clear()
-net.train()
-for mb_idx in range(EPOCH_SIZE):
-    features        = READER_TRAIN.get_minibatch()
-    out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
-    loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    train_loss     += loss.item()
-is_complete         = False
-READER_DEV.reset()
+    print_message("Starting training round {}".format(ep_idx))
+    train_loss          = 0.0
+    for docs in scores.values():
+        docs.clear()
+    net.train()
+    for mb_idx in range(EPOCH_SIZE):
+        features        = READER_TRAIN.get_minibatch()
+        out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
+        loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        train_loss     += loss.item()
+    is_complete         = False
+    READER_DEV.reset()
     net.eval()
     print_message("Starting evaluation round Dev {}".format(ep_idx))
     while not is_complete:
@@ -335,7 +335,7 @@ READER_DEV.reset()
             d           = int(features['meta'][i][1])
             if q in scores:
                 scores[q][d]= out[i][0]
-            is_complete     = (meta_cnt <= MB_SIZE)
+            is_complete     = (meta_cnt < MB_SIZE)
         mrr                 = 0
         for qid, docs in scores.items():
             ranked          = sorted(docs, key=docs.get, reverse=True)
@@ -358,7 +358,7 @@ READER_DEV.reset()
             d           = int(features['meta'][i][1])
             if q in scoreseval:
                 scoreseval[q][d]= out[i][0]
-            is_complete     = (meta_cnt <= MB_SIZE)
+            is_complete     = (meta_cnt < MB_SIZE)
         mrr                 = 0
         for qid, docs in scoreseval.items():
             ranked          = sorted(docs, key=docs.get, reverse=True)
