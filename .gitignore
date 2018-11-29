@@ -1,13 +1,14 @@
 Q+A/BidafBaseline/experiment/
 Q+A/BidafBaseline/mrcqa/__pycache__/
 Q+A/BidafBaseline/scripts/__pycache__/
-Ranking/Baselines/DataDir/qrels.dev.tsv
-Ranking/Baselines/DataDir/qrels.eval.tsv
-Ranking/Baselines/DataDir/qrels.train.tsv
-Ranking/Baselines/DataDir/top1000.dev.tsv
-Ranking/Baselines/DataDir/top1000.eval.tsv
-Ranking/Baselines/DataDir/triples.train.small.tsv
-Ranking/Baselines/DataDir/triples.train.full.tsv
-Ranking/Baselines/DataDir/collection.tsv
+Ranking/Baselines/data/qrels.dev.tsv
+Ranking/Baselines/data/qrels.eval.tsv
+Ranking/Baselines/data/qrels.train.tsv
+Ranking/Baselines/data/top1000.dev.tsv
+Ranking/Baselines/data/top1000.eval.tsv
+Ranking/Baselines/data/triples.train.small.tsv
+Ranking/Baselines/data/triples.train.full.tsv
+Ranking/Baselines/data/collection.tsv
+Ranking/Baselines/tensors.duet
 *.pyc
 
