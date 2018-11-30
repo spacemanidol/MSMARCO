@@ -10,10 +10,9 @@ import datetime
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 import torch.optim as optim
 
-
-import checkpointing
 import msmarco_eval
 
 
@@ -28,15 +27,15 @@ POOLING_KERNEL_WIDTH_DOC        = 100
 NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 128
-EPOCH_SIZE                      = 128
+MB_SIZE                         = 256
+EPOCH_SIZE                      = 256
 NUM_EPOCHS                      = 500
 LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'data'
 CHECKPOINT_FOLDER               = 'checkpoints'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
-DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.small.tsv")
+DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.full.tsv")
 DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
 QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
@@ -278,7 +277,7 @@ def train(READER_TRAIN, net, optimizer, criterion):
     train_loss          = 0.0
     for mb_idx in range(EPOCH_SIZE):
         features        = READER_TRAIN.get_minibatch()
-        out         = torch.cat(tuple([net(torch.from_numpy(features['local'][i]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][i]).to(DEVICE)) for i in range(READER_TRAIN.num_docs)]), 1)
+        out         = torch.cat(tuple([net(Variable(torch.from_numpy(features['local'][i])).cuda(), Variable(torch.from_numpy(features['dist_q']).cuda()), Variable(torch.from_numpy(features['dist_d'][i]).cuda())) for i in range(READER_TRAIN.num_docs)]), 1)
         loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
         optimizer.zero_grad()
         loss.backward()
@@ -292,14 +291,10 @@ def predict(READER_PREDICT, net,qrels,scores,to_rerank):
     is_complete         = False
     READER_PREDICT.reset()
     net.eval()
-    count = 0
     while not is_complete:
-        count += 1
-        print_message(count)
         features        = READER_PREDICT.get_minibatch()
-        out         = net(torch.from_numpy(features['local'][0]).to(DEVICE), torch.from_numpy(features['dist_q']).to(DEVICE), torch.from_numpy(features['dist_d'][0]).to(DEVICE))
+        out         = net(Variable(torch.from_numpy(features['local'][0])).cuda(), Variable(torch.from_numpy(features['dist_q'])).cuda(), Variable(torch.from_numpy(features['dist_d'][0]).cuda()))
         meta_cnt        = len(features['meta'])
-        print(meta_cnt)
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
@@ -340,7 +335,7 @@ def main():
     READER_PREDICT = DataReader(DATA_FILE_PREDICT, 2, False)
     READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True)
     qrels, scores = load_file_to_rerank(QRELS, 1)
-    to_rerank, _ = load_file_to_rerank(DATA_FILE_PREDICT,0)
+    #to_rerank, _ = load_file_to_rerank(DATA_FILE_PREDICT,0)
     torch.manual_seed(1)
     print_message('Starting')
 
@@ -349,18 +344,18 @@ def main():
         print("Previous Model Found and Loaded")
     except:
         print("No Previous Model Found. Creating new")
-        net                     = Duet()
-        net                     = net.to(DEVICE)
+        net                     = Duet().cuda()
 
     criterion               = nn.CrossEntropyLoss()
     optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
     print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
+    mrr = 0
     for ep_idx in range(NUM_EPOCHS):
-        print_message("Starting training round {}".format(ep_idx))
-        net, train_loss  = train(READER_TRAIN,net, optimizer,criterion)
-        mrr = predict(READER_PREDICT,net,qrels,scores,to_rerank)
-        torch.save(net,'tensors.duet')
-        print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
+            print_message("Starting training round {}".format(ep_idx))
+            net, train_loss  = train(READER_TRAIN,net, optimizer,criterion)
+            #mrr = predict(READER_PREDICT,net,qrels,scores,to_rerank)
+            torch.save(net,'tensors.duet')
+            print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
 
 if __name__ == '__main__':
     main()
