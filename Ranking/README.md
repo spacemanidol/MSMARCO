@@ -18,18 +18,18 @@ Finally, understanding that this ranking data may not be useful to train a Deep 
 Given that all files have been generated from the v2.1 dataset meaning that in theory anyone can generate the files we provide to their own specifications and liking. We will hopefully opensource our productin data shortly.
 #### Passage to PassageID
 This file contains each unique Passage in the larger MSMARCO dataset. Format is PID to Passage
-'''
+````
 7	Manhattan Project. The Manhattan Project was a research and development undertaking during World War II that produced the first nuclear weapons. It was led by the United States with the support of the United Kingdom and Canada. From 1942 to 1946, the project was under the direction of Major General Leslie Groves of the U.S. Army Corps of Engineers. Nuclear physicist Robert Oppenheimer was the director of the Los Alamos Laboratory that designed the actual bombs. The Army component of the project was designated the
 8	In June 1942, the United States Army Corps of Engineersbegan the Manhattan Project- The secret name for the 2 atomic bombs.
 9	One of the main reasons Hanford was selected as a site for the Manhattan Project's B Reactor was its proximity to the Columbia River, the largest river flowing into the Pacific Ocean from the North American coast.
-'''
+````
 Size info
-'''
+````
 8841823 collection.tsv
-'''
+````
 #### Query to QueryID
 This has been split for Train, Dev and Eval. These sets include all queries including those which do not have answers. If queries with no answer were removed the sets would be around 35% smaller.
-'''
+````
 121352	define extreme
 634306	what does chattel mean on credit history
 920825	what was the great leap forward brainly
@@ -40,17 +40,17 @@ This has been split for Train, Dev and Eval. These sets include all queries incl
 303205	how much can i contribute to nondeductible ira
 570009	what are the four major groups of elements
 492875	sanitizer temperature
-'''
+````
 Size info
-'''
+````
   101093 queries.dev.tsv
   101092 queries.eval.tsv
   808731 queries.train.tsv
  1010916 total
-'''
+````
 #### Relevant Passages
 We have processed the train and dev set and made a QID to PID mapping of when a question has had a passage marked as relevant. We have held out the eval set but its distribution matches that of dev. 
-'''
+````
 1185869	0
 1185868	16
 1185854	1176003
@@ -61,33 +61,24 @@ We have processed the train and dev set and made a QID to PID mapping of when a 
 410717	6830906
 1174761	754254
 605123	965816
-'''
+````
 Size info
-'''
+````
   45684 qrels.dev.tsv
  401023 qrels.train.tsv
  446707 total
-'''
+````
 #### Triples.Train
 The `triples.train.<size>.tsv` are two files that we have created as an easy to consume training dataset. Each line of the TSV contains querytext, A relevant passage, and an non-relevant passage all separated by `\t`. The only difference between triples.train.full.tsv and triples.train.small.tsv is the smaller is ~10% of the overall size since the full sized train is > 270gbs.
 
 Example line:
-```
+````
 what fruit is native to australia       Passiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.assiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.   The kola nut is the fruit of the kola tree, a genus (Cola) of trees that are native to the tropical rainforests of Africa.
-'''
-size info
-'''
+````
 
-'''
 #### Top1000
 We have produced the Top1000 for Dev and for Eval but just note they are just subsamples of 1000 queries because otherwise the file size balooned too large. 
-'''
 
-'''
-size info
-'''
-
-'''
 ### Evaluation
 Evaluation of systems will be done using MRR@10. We have selected such a low MRR number because the sizes of files candidates need to create quickly balloon with each additional depth. Official evaluation scripts and samples are availible [Here](https://github.com/dfcf93/MSMARCOV2/tree/master/Ranking/Evaluation).
 
