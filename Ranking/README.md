@@ -75,15 +75,9 @@ Example line:
 ````
 what fruit is native to australia       Passiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.assiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.   The kola nut is the fruit of the kola tree, a genus (Cola) of trees that are native to the tropical rainforests of Africa.
 ````
-size info
-````
 
-````
 #### Top1000
 We have produced the Top1000 for Dev and for Eval but just note they are just subsamples of 1000 queries because otherwise the file size balooned too large. 
-
-size info
-
 
 ### Evaluation
 Evaluation of systems will be done using MRR@10. We have selected such a low MRR number because the sizes of files candidates need to create quickly balloon with each additional depth. Official evaluation scripts and samples are availible [Here](https://github.com/dfcf93/MSMARCOV2/tree/master/Ranking/Evaluation).
