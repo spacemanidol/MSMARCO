@@ -2,7 +2,6 @@ from __future__ import print_function
 import sys
 import os
 import os.path
-import h5py
 import csv
 import re
 import random
@@ -29,10 +28,9 @@ NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
 MB_SIZE                         = 256
 EPOCH_SIZE                      = 256
-NUM_EPOCHS                      = 500
+NUM_EPOCHS                      = 50
 LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'data'
-CHECKPOINT_FOLDER               = 'checkpoints'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
 DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.full.tsv")
@@ -272,18 +270,31 @@ class Duet(torch.nn.Module):
 def print_message(s):
     print("[{}] {}".format(datetime.datetime.utcnow().strftime("%b %d, %H:%M:%S"), s), flush=True)
 
+
 def train(READER_TRAIN, net, optimizer, criterion):
     net.train()
     train_loss          = 0.0
     for mb_idx in range(EPOCH_SIZE):
         features        = READER_TRAIN.get_minibatch()
-        out         = torch.cat(tuple([net(Variable(torch.from_numpy(features['local'][i])).cuda(), Variable(torch.from_numpy(features['dist_q']).cuda()), Variable(torch.from_numpy(features['dist_d'][i]).cuda())) for i in range(READER_TRAIN.num_docs)]), 1)
-        loss            = criterion(out, torch.from_numpy(features['labels']).to(DEVICE))
+        acc = []
+        x = torch.from_numpy(features['labels']).to(DEVICE)
+        x2 = Variable(torch.from_numpy(features['dist_q'])).to(DEVICE)
+        for i in range(READER_TRAIN.num_docs):
+            x1 = Variable(torch.from_numpy(features['local'][i])).to(DEVICE)
+            x3 = Variable(torch.from_numpy(features['dist_d'][i])).to(DEVICE)
+            y = net(x1,x2,x3).to(DEVICE)
+            acc.append(y)
+        out = torch.cat(tuple(acc),1)
+        loss = criterion(out, x)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         train_loss     += loss.item()
+        print_message("Epoch:{} Loss:{}".format(mb_idx,loss.item()))
+        del y, x, x1,x2,x3,acc, out,loss
+        torch.cuda.empty_cache()
     return net, train_loss
+
 
 def predict(READER_PREDICT, net,qrels,scores,to_rerank):
     for docs in scores.values():
@@ -293,8 +304,10 @@ def predict(READER_PREDICT, net,qrels,scores,to_rerank):
     net.eval()
     while not is_complete:
         features        = READER_PREDICT.get_minibatch()
-        out         = net(Variable(torch.from_numpy(features['local'][0])).cuda(), Variable(torch.from_numpy(features['dist_q'])).cuda(), Variable(torch.from_numpy(features['dist_d'][0]).cuda()))
         meta_cnt        = len(features['meta'])
+        input_data = [Variable(torch.from_numpy(features['local'][0])).to(DEVICE), Variable(torch.from_numpy(features['dist_q'])).to(DEVICE), Variable(torch.from_numpy(features['dist_d'][0])).to(DEVICE)]
+        out         = net(input_data[0],input_data[1], input_data[2]).cpu.data.numpy()
+        torch.cuda.empty_cache()
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
@@ -311,6 +324,7 @@ def predict(READER_PREDICT, net,qrels,scores,to_rerank):
     mrr                /= len(scores)
     return mrr
 
+
 def load_file_to_rerank(filename, offset):
     target,scores = {}, {}
     with open(filename,'r', encoding="utf-8") as f:
@@ -323,6 +337,7 @@ def load_file_to_rerank(filename, offset):
             target[qid].append(pid)
             scores[qid] = {}
     return target,scores
+
 
 def evaluate(path_to_reference,path_to_candidate):
     metrics = msmarco_eval.compute_metrics_from_files(path_to_reference, path_to_candidate)
@@ -338,14 +353,12 @@ def main():
     #to_rerank, _ = load_file_to_rerank(DATA_FILE_PREDICT,0)
     torch.manual_seed(1)
     print_message('Starting')
-
     try:
         net = torch.load('tensors.duet')
-        print("Previous Model Found and Loaded")
+        print_message("Previous Model Found and Loaded")
     except:
-        print("No Previous Model Found. Creating new")
-        net                     = Duet().cuda()
-
+        print_message("No Previous Model Found. Creating new")
+        net = Duet().to(DEVICE)
     criterion               = nn.CrossEntropyLoss()
     optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
     print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
