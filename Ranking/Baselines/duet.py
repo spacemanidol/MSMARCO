@@ -19,7 +19,7 @@ DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"
 ARCH_TYPE                       = 2
 MAX_QUERY_TERMS                 = 20
 MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 512
+NUM_HIDDEN_NODES                = 256
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
@@ -27,8 +27,8 @@ NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLI
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
 MB_SIZE                         = 256
-EPOCH_SIZE                      = 256
-NUM_EPOCHS                      = 50
+EPOCH_SIZE                      = 512
+NUM_EPOCHS                      = 10
 LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'data'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
@@ -297,7 +297,7 @@ def train(READER_TRAIN, net, optimizer, criterion):
     return net, train_loss
 
 
-def evaluate(READER_PREDICT, net,qrels,scores):
+def evaluate(READER_PREDICT, net, qrels, scores, to_rerank):
     for docs in scores.values():
         docs.clear()
     is_complete         = False
@@ -306,10 +306,11 @@ def evaluate(READER_PREDICT, net,qrels,scores):
     while not is_complete:
         features        = READER_PREDICT.get_minibatch()
         meta_cnt        = len(features['meta'])
+        is_complete     = (meta_cnt < MB_SIZE)
         x1 = Variable(torch.from_numpy(features['local'][0])).to(DEVICE)
         x2 = Variable(torch.from_numpy(features['dist_q'])).to(DEVICE)
-        x3 = Variable(torch.from_numpy(features['dist_d'][0])).to(DEVICE)]
-        out         = net(x1,x2,x3).cpu.data.numpy()
+        x3 = Variable(torch.from_numpy(features['dist_d'][0])).to(DEVICE)
+        out         = net(x1,x2,x3).to(DEVICE).data.cpu().numpy()
         for i in range(meta_cnt):
             q           = int(features['meta'][i][0])
             d           = int(features['meta'][i][1])
@@ -318,43 +319,21 @@ def evaluate(READER_PREDICT, net,qrels,scores):
         del x1,x2,x3, out, features
         torch.cuda.empty_cache()
         is_complete     = (meta_cnt < MB_SIZE)
-    
     mrr                 = 0
     for qid, docs in scores.items():
         ranked          = sorted(docs, key=docs.get, reverse=True)
-        #for i in range(len(ranked)): Generate Full Ranking
-        for i in range(0,10):
-            if ranked[i] in qrels[qid]:
-                mrr    += 1 / (i + 1)
-                break  
-    mrr                /= len(scores)
-    return mrr
-
-def predict(READER_PREDICT,to_rerank, net):
-    is_complete         = False
-    READER_PREDICT.reset()
-    net.eval()
-    while not is_complete:
-        features        = READER_PREDICT.get_minibatch()
-        meta_cnt        = len(features['meta'])
-        x1 = Variable(torch.from_numpy(features['local'][0])).to(DEVICE)
-        x2 = Variable(torch.from_numpy(features['dist_q'])).to(DEVICE)
-        x3 = Variable(torch.from_numpy(features['dist_d'][0])).to(DEVICE)]
-        out         = net(x1,x2,x3).cpu.data.numpy()
-        for i in range(meta_cnt):
-            q           = int(features['meta'][i][0])
-            d           = int(features['meta'][i][1])
-            if q in to_rerank:
-                to_rerank[q][d]= out[i][0]
-        del x1,x2,x3, out, features
-        torch.cuda.empty_cache()
-        is_complete     = (meta_cnt < MB_SIZE)
+        if len(ranked) > 0:
+            for i in range(len(ranked)):
+                if ranked[i] in qrels[qid]:
+                    mrr    += 1 / (i + 1)
+                    break
+    mrr                /= len(to_rerank)
     with open(DATA_FILE_PREDICTOUT,'w') as w:
         for qid in to_rerank:
-            count = 0
-            fo
-            for i in range(0,10):
-            
+            ranked = sorted(scores[qid], reverse=False)
+            for i in range(0, min(len(ranked),10)):
+                w.write('{}\t{}\t{}\n'.format(qid,ranked[i],i))
+    return mrr
             
 def load_file_to_rerank(filename, offset):
     target,scores = {}, {}
@@ -367,25 +346,14 @@ def load_file_to_rerank(filename, offset):
                 target[qid]          = []
             target[qid].append(pid)
             scores[qid] = {}
-    return target,scores
-
-
-def evaluate(path_to_reference,path_to_candidate):
-    metrics = msmarco_eval.compute_metrics_from_files(path_to_reference, path_to_candidate)
-    print('#####################')
-    for metric in sorted(metrics):
-        print('{}: {}'.format(metric, metrics[metric]))
-    print('#####################')            
+    return target,scores            
 
 def main():
-    READER_PREDICT = DataReader(DATA_FILE_PREDICT, 2, False)
     READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True)
-    qrels, scores = load_file_to_rerank(QRELS, 1)
-    _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
     torch.manual_seed(1)
     print_message('Starting')
     try:
-        net = torch.load('tensors.duet')
+        net = torch.load('tensors.duet').to(DEVICE)
         print_message("Previous Model Found and Loaded")
     except:
         print_message("No Previous Model Found. Creating new")
@@ -397,14 +365,18 @@ def main():
     for ep_idx in range(NUM_EPOCHS):
         print_message("Starting training round {}".format(ep_idx))
         net, train_loss  = train(READER_TRAIN,net, optimizer,criterion)
-        mrr = evalutate(READER_PREDICT,net,qrels,scores)
         torch.save(net,'tensors.duet')
-        print_message('epoch:{}, loss: {}, mrr: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE, mrr))
-    predict(READER_PREDICT,to_rerank, net,DATA_FILE_PREDICTOUT)
+        print_message('epoch:{}, loss: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE))
+    print_message('Evaluating and Predicting')
+    READER_PREDICT = DataReader(DATA_FILE_PREDICT, 2, False)
+    qrels, scores = load_file_to_rerank(QRELS, 1)
+    _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
+    mrr = evaluate(READER_PREDICT,net,qrels,scores, to_rerank) #Evaluation is Slow
+    print_message('MRR:{}'.format(mrr))
     metrics = msmarco_eval.compute_metrics_from_files(QRELS,DATA_FILE_PREDICTOUT)
-    print('#####################')
+    print_message('#####################')
     for metric in sorted(metrics):
-        print('{}: {}'.format(metric, metrics[metric]))
-    print('#####################')            
+        print_message('{}: {}'.format(metric, metrics[metric]))
+    print_message('#####################')            
 if __name__ == '__main__':
     main()
