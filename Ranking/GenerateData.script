@@ -59,7 +59,6 @@ qrels =
          INNER JOIN
              qt
          ON qt.qid == qrels.qid;
-//Consider queries that have relevant passage mapping
 qt = SELECT qid, ts FROM qt SEMIJOIN qrels ON qt.qid==qrels.qid;
 qt = SELECT qid,
            t.ToLower().Replace("\'","") AS tid
@@ -74,9 +73,6 @@ qt =
          ANTISEMIJOIN
              sw
          ON qt.tid==sw.tid;
-//Code needed for all parts - End
-
-//Code Part One - Begin
 uqt =
     SELECT DISTINCT tid
     FROM qt;
@@ -177,41 +173,9 @@ td =
            Math.Max((double) (idf * ((tf * (k + 1)) / (tf + k * (1 - b + b * lend)))), 0) AS score
     FROM td
     HAVING score > 0;
-//OUTPUT td TO SSTREAM @TDScores_SS HASH CLUSTERED BY tid SORTED BY tid;
-
-//Code Part One - End
-
-//This code block is just for debugging!!
-//tid_did_freq =
-//    SELECT tid,
-//           COUNT(DISTINCT did) AS numD
-//    FROM td
-//    GROUP BY tid
-//    ORDER BY numD DESC;
-//OUTPUT tid_did_freq TO @TD;
-//
-//tq = SELECT tid, qid FROM qt;
-//tid_qid_freq = SELECT tid,
-//           COUNT(DISTINCT qid) AS numQ
-//    FROM tq
-//    GROUP BY tid
-//    ORDER BY numQ DESC;
-//OUTPUT tid_qid_freq TO @TQ;
-//
-//tid_rows =
-//    SELECT tid_qid_freq.tid,
-//           (tid_qid_freq.numQ * tid_did_freq.numD) AS numR
-//    FROM tid_qid_freq
-//         JOIN
-//             tid_did_freq
-//         ON tid_qid_freq.tid == tid_did_freq.tid ORDER BY numR DESC;
-//
-//OUTPUT tid_rows TO @TRows;
-
-//Code Part Two - Begin [Run this with -buckets 2500 and 1000 tokens for quick results!]
-
-//td = SSTREAM @TDScores_SS;
-//td = SELECT tid, did, score FROM td;
+OUTPUT td TO SSTREAM @TDScores_SS HASH CLUSTERED BY tid SORTED BY tid;
+td = SSTREAM @TDScores_SS;
+td = SELECT tid, did, score FROM td;
 [SKEWJOIN=(SKEW=FROMBOTH,REPARTITION=FULLJOIN,LEVEL=200000,PARTITIONCOUNT=5000)]
 [ROWCOUNT=300000000000000]
 qd =
@@ -247,40 +211,7 @@ qd_qid =  SELECT qid,
     FROM qd;
 OUTPUT qd_qid
 TO @trec_eval_eval ORDER BY qid, rank;
-*/
-//OUTPUT qd TO SSTREAM @QDRanks_SS HASH CLUSTERED BY qid SORTED BY qid;
-//Code Part Two - End
 
-
-//Debugging Code begin : This code section is for debugging only
-//[LOWDISTINCTNESS(qid,did)]
-//[ROWCOUNT=300000000000000]
-//qd_top10 = SELECT qid,
-//                    did,
-//                    score,
-//                    ROW_NUMBER() OVER(PARTITION BY qid ORDER BY score DESC, did) AS rank
-//    FROM qd
-//    HAVING rank <= 10;
-//OUTPUT qd_top10 TO @QDScores_and_Ranks_top10;
-//qd_top10_text = SELECT qid, qt_old.ts AS qtext, did, score, rank FROM qd_top10 JOIN qt_old ON qd_top10.qid==qt_old.qid;
-//qd_top10_text2 =
-//    SELECT qid,
-//           qtext,
-//           did,
-//           dt.ts AS dtext,
-//           score,
-//           rank
-//    FROM qd_top10_text
-//         JOIN
-//             dt
-//         ON qd_top10_text.did == dt.did;
-//OUTPUT qd_top10_text2
-//TO @QDScores_and_Ranks_top10_text ORDER BY qtext, rank;
-//Debugging Code End
-
-
-//Code Part Three - Begin 
-/*
 qd = SSTREAM @QDRanks_SS;
 qd = SELECT qid, did, rank FROM qd;
 QDRankingRatings =
@@ -300,27 +231,13 @@ op1 = SELECT qid, did, rank, rating FROM QDBestRanking ORDER BY qid, rank;
 OUTPUT op1 TO @QDPairsBM25;
 temp = SELECT qid, did, rating FROM QDBestRanking;
 
-
-
-
-
-
-
-
 co
 op2 = SELECT qid,
        string.Join(",", ARRAY_AGG(IF(rating == 1, did, "")).Where(s => !String.IsNullOrEmpty(s))) AS RelevantDocs,
               string.Join(",", ARRAY_AGG(IF(rating == 0, did, "")).Where(s => !String.IsNullOrEmpty(s)))AS NonRelevantDocs FROM temp; 
 OUTPUT op2
 TO @QDListsForTraining;
-*/
-//Code Part Three - End
 
-//Code Part Four - Begin
-
-//Analysis
-//Recall computation
-/*
 all_pos = SELECT COUNT() AS pos FROM qrels;
 qd_lists =
     EXTRACT qid : string,
@@ -418,10 +335,7 @@ best_rank = SELECT qd.qid, MIN(rank) AS best_rank FROM qd JOIN qrels ON qd.qid==
 rec_rank = SELECT qid, ((double)1/best_rank) AS rec_rank FROM best_rank;
 MRR = SELECT AVG(rec_rank) AS MRR FROM rec_rank;
 OUTPUT MRR TO @MRR;
-*/
 
-// Create training data for hackathon
-/*
 qd_lists = EXTRACT qid: int, pos_list:string, neg_list:string FROM @QDListsForTraining USING DefaultTextExtractor();
 qd_train = SELECT qid, pos_list, neg_list FROM qd_lists WHERE pos_list != NULL;
 
@@ -452,9 +366,8 @@ train_triplets_text = SELECT qText, dt.ts AS dTextPos, neg_did, idx FROM train_t
 train_triplets_text = SELECT qText, dTextPos, dt.ts AS dTextNeg, idx FROM train_triplets_text JOIN dt ON train_triplets_text.neg_did==dt.did;
 train_triplets_text = SELECT qText, dTextPos, dTextNeg, idx FROM train_triplets_text ORDER BY idx;
 OUTPUT train_triplets_text TO @train_triplets_text USING MyCsvOutputter();
-*/
-#CS
 
+#CS
 using Microsoft.SCOPE.Types;
 using System;
 using System.Collections.Concurrent;
