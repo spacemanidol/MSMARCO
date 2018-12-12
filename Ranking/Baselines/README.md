@@ -40,4 +40,4 @@ erasmus@spacemanidol:~$ conda activate msmarcoranking
 [Dec 12, 20:32:20] QueriesRanked: 10
 [Dec 12, 20:32:20] #####################
 ````
-6. Start tinkering. Modify the MB_SIZE depending on the CPU size. 128 seems to work well for the machine I tested it on (bigger caused crashes) with a 1080ti.
+6. Start tinkering. Modify the MB_SIZE and Epoch size depending on the GPU size. 128 seems to work well for the machine I tested it on (bigger caused crashes) with a 1080ti.
