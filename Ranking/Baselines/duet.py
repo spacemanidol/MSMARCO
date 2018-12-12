@@ -19,7 +19,7 @@ DEVICE                          = torch.device("cuda:0")    # torch.device("cpu"
 ARCH_TYPE                       = 2
 MAX_QUERY_TERMS                 = 20
 MAX_DOC_TERMS                   = 200
-NUM_HIDDEN_NODES                = 256
+NUM_HIDDEN_NODES                = 512
 TERM_WINDOW_SIZE                = 3
 POOLING_KERNEL_WIDTH_QUERY      = MAX_QUERY_TERMS - TERM_WINDOW_SIZE + 1 # 20 - 3 + 1 = 18
 POOLING_KERNEL_WIDTH_DOC        = 100
@@ -28,26 +28,28 @@ NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
 MB_SIZE                         = 256
 EPOCH_SIZE                      = 512
-NUM_EPOCHS                      = 10
+NUM_EPOCHS                      = 1000
 LEARNING_RATE                   = 1e-5
 DATA_DIR                        = 'data'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
 DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.full.tsv")
-DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
-DATA_FILE_PREDICTOUT               = os.path.join(DATA_DIR, "ranked.tsv")
+#DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
+#DATA_FILE_PREDICTOUT              = os.path.join(DATA_DIR, "ranked.dev.tsv")
+DATA_FILE_PREDICTOUT               = os.path.join(DATA_DIR, "ranked.eval.tsv")
 
-QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
+#QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
-#QRELS                      = os.path.join(DATA_DIR, "qrels.eval.tsv")
-#DATA_FILE_PREDICT                   = os.path.join(DATA_DIR, "top1000.eval.tsv")
+QRELS                      = os.path.join(DATA_DIR, "qrels.eval.tsv")
+DATA_FILE_PREDICT                   = os.path.join(DATA_DIR, "top1000.eval.tsv")
 
 class DataReader:
-    def __init__(self, data_file, num_meta_cols, multi_pass):
+    def __init__(self, data_file, num_meta_cols, multi_pass, mb_size):
         self.num_meta_cols                  = num_meta_cols
         self.multi_pass                     = multi_pass
         self.regex_drop_char                = re.compile('[^a-z0-9\s]+')
         self.regex_multi_space              = re.compile('\s+')
+        self.mb_size                        = mb_size
         self.__load_ngraphs()
         self.__load_idfs()
         self.__init_data(data_file)
@@ -79,14 +81,14 @@ class DataReader:
         if ARCH_TYPE != 1:
             self.features['local']          = [] 
         if ARCH_TYPE > 0:
-            self.features['dist_q']         = np.zeros((MB_SIZE, NUM_NGRAPHS, MAX_QUERY_TERMS), dtype=np.float32)
+            self.features['dist_q']         = np.zeros((self.mb_size, NUM_NGRAPHS, MAX_QUERY_TERMS), dtype=np.float32)
             self.features['dist_d']         = []
         for i in range(self.num_docs):
             if ARCH_TYPE != 1:
-                self.features['local'].append(np.zeros((MB_SIZE, MAX_DOC_TERMS, MAX_QUERY_TERMS), dtype=np.float32))
+                self.features['local'].append(np.zeros((self.mb_size, MAX_DOC_TERMS, MAX_QUERY_TERMS), dtype=np.float32))
             if ARCH_TYPE > 0:
-                self.features['dist_d'].append(np.zeros((MB_SIZE, NUM_NGRAPHS, MAX_DOC_TERMS), dtype=np.float32))
-        self.features['labels']             = np.zeros((MB_SIZE), dtype=np.int64)
+                self.features['dist_d'].append(np.zeros((self.mb_size, NUM_NGRAPHS, MAX_DOC_TERMS), dtype=np.float32))
+        self.features['labels']             = np.zeros((self.mb_size), dtype=np.int64)
         self.features['meta']               = []        
     def __clear_minibatch(self):
         if ARCH_TYPE > 0:
@@ -99,7 +101,7 @@ class DataReader:
         self.features['meta'].clear()
     def get_minibatch(self):
         self.__clear_minibatch()
-        for i in range(MB_SIZE):
+        for i in range(self.mb_size):
             row                             = self.reader.readline()
             if row == '':
                 if self.multi_pass:
@@ -140,7 +142,7 @@ class DataReader:
         self.__clear_minibatch()
         prev_d = []
         first_q = []
-        for i in range(MB_SIZE):
+        for i in range(self.mb_size):
             row                             = self.reader.readline()
             if row == '':
                 if self.multi_pass:
@@ -297,7 +299,9 @@ def train(READER_TRAIN, net, optimizer, criterion):
     return net, train_loss
 
 
-def evaluate(READER_PREDICT, net, qrels, scores, to_rerank):
+def evaluate(net, qrels, scores, to_rerank):
+    MB_SIZE = 2560
+    READER_PREDICT = DataReader(DATA_FILE_PREDICT, 2, False, MB_SIZE)
     for docs in scores.values():
         docs.clear()
     is_complete         = False
@@ -316,9 +320,8 @@ def evaluate(READER_PREDICT, net, qrels, scores, to_rerank):
             d           = int(features['meta'][i][1])
             if q in scores:
                 scores[q][d]= out[i][0]
-        del x1,x2,x3, out, features
+        del x1,x2,x3, out, q, d ,features
         torch.cuda.empty_cache()
-        is_complete     = (meta_cnt < MB_SIZE)
     mrr                 = 0
     for qid, docs in scores.items():
         ranked          = sorted(docs, key=docs.get, reverse=True)
@@ -332,9 +335,10 @@ def evaluate(READER_PREDICT, net, qrels, scores, to_rerank):
         for qid in to_rerank:
             ranked = sorted(scores[qid], reverse=False)
             for i in range(0, min(len(ranked),10)):
-                w.write('{}\t{}\t{}\n'.format(qid,ranked[i],i))
+                w.write('{}\t{}\t{}\n'.format(qid,ranked[i],i+1))
     return mrr
-            
+
+
 def load_file_to_rerank(filename, offset):
     target,scores = {}, {}
     with open(filename,'r', encoding="utf-8") as f:
@@ -349,7 +353,7 @@ def load_file_to_rerank(filename, offset):
     return target,scores            
 
 def main():
-    READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True)
+    READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True, 256)
     torch.manual_seed(1)
     print_message('Starting')
     try:
@@ -361,17 +365,14 @@ def main():
     criterion               = nn.CrossEntropyLoss()
     optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
     print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
-    mrr = 0
     for ep_idx in range(NUM_EPOCHS):
-        print_message("Starting training round {}".format(ep_idx))
         net, train_loss  = train(READER_TRAIN,net, optimizer,criterion)
         torch.save(net,'tensors.duet')
         print_message('epoch:{}, loss: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE))
     print_message('Evaluating and Predicting')
-    READER_PREDICT = DataReader(DATA_FILE_PREDICT, 2, False)
     qrels, scores = load_file_to_rerank(QRELS, 1)
     _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
-    mrr = evaluate(READER_PREDICT,net,qrels,scores, to_rerank) #Evaluation is Slow
+    mrr = evaluate(net,qrels,scores, to_rerank) #Evaluation is Slow
     print_message('MRR:{}'.format(mrr))
     metrics = msmarco_eval.compute_metrics_from_files(QRELS,DATA_FILE_PREDICTOUT)
     print_message('#####################')
