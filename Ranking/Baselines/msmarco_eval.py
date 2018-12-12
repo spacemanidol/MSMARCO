@@ -133,7 +133,7 @@ def compute_metrics(qids_to_relevant_passageids, qids_to_ranked_candidate_passag
         raise IOError("No matching QIDs found. Are you sure you are scoring the evaluation set?")
     
     MRR = MRR/len(ranking)
-    all_scores['MRR'] = MRR
+    all_scores['MRR @10'] = MRR
     all_scores['QueriesRanked'] = len(ranking)
     return all_scores
                 

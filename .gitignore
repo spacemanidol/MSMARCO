@@ -1,11 +1,15 @@
 Q+A/BidafBaseline/experiment/
 Q+A/BidafBaseline/mrcqa/__pycache__/
 Q+A/BidafBaseline/scripts/__pycache__/
+Ranking/Baselines/__pycache__/
 Ranking/Baselines/data/qrels.dev.tsv
 Ranking/Baselines/data/qrels.eval.tsv
 Ranking/Baselines/data/qrels.train.tsv
 Ranking/Baselines/data/top1000.dev.tsv
 Ranking/Baselines/data/top1000.eval.tsv
+Ranking/Baselines/data/top1000.dev.tiny.tsv
+Ranking/Baselines/data/top1000.eval.tiny.tsv
+Ranking/Baselines/data/ranked*
 Ranking/Baselines/data/triples.train.small.tsv
 Ranking/Baselines/data/triples.train.full.tsv
 Ranking/Baselines/data/collection.tsv

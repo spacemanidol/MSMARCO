@@ -9,8 +9,8 @@ import datetime
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.optim as optim
+from torch.autograd import Variable
 
 import msmarco_eval
 
@@ -26,22 +26,23 @@ POOLING_KERNEL_WIDTH_DOC        = 100
 NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 256
-EPOCH_SIZE                      = 512
-NUM_EPOCHS                      = 1000
-LEARNING_RATE                   = 1e-5
+MB_SIZE                         = 128
+EPOCH_SIZE                      = 1000
+NUM_EPOCHS                      = 100
+LEARNING_RATE                   = 1e-3
 DATA_DIR                        = 'data'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
 DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.full.tsv")
+DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tiny.tsv")
 #DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
-#DATA_FILE_PREDICTOUT              = os.path.join(DATA_DIR, "ranked.dev.tsv")
-DATA_FILE_PREDICTOUT               = os.path.join(DATA_DIR, "ranked.eval.tsv")
+DATA_FILE_PREDICTOUT              = os.path.join(DATA_DIR, "ranked.dev.tsv")
+QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
-#QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
-QRELS                      = os.path.join(DATA_DIR, "qrels.eval.tsv")
-DATA_FILE_PREDICT                   = os.path.join(DATA_DIR, "top1000.eval.tsv")
+#DATA_FILE_PREDICTOUT               = os.path.join(DATA_DIR, "ranked.eval.tsv")
+#QRELS                      = os.path.join(DATA_DIR, "qrels.eval.tsv")
+#DATA_FILE_PREDICT                   = os.path.join(DATA_DIR, "top1000.eval.tsv")
 
 class DataReader:
     def __init__(self, data_file, num_meta_cols, multi_pass, mb_size):
@@ -352,8 +353,11 @@ def load_file_to_rerank(filename, offset):
             scores[qid] = {}
     return target,scores            
 
+
 def main():
     READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True, 256)
+    qrels, scores = load_file_to_rerank(QRELS, 1)
+    _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
     torch.manual_seed(1)
     print_message('Starting')
     try:
@@ -365,19 +369,21 @@ def main():
     criterion               = nn.CrossEntropyLoss()
     optimizer               = optim.Adam(net.parameters(), lr=LEARNING_RATE)
     print_message('Number of learnable parameters: {}'.format(net.parameter_count()))
+    print_message('Training for {} epochs'.format(NUM_EPOCHS))
     for ep_idx in range(NUM_EPOCHS):
         net, train_loss  = train(READER_TRAIN,net, optimizer,criterion)
-        torch.save(net,'tensors.duet')
         print_message('epoch:{}, loss: {}'.format(ep_idx + 1, train_loss / EPOCH_SIZE))
-    print_message('Evaluating and Predicting')
-    qrels, scores = load_file_to_rerank(QRELS, 1)
-    _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
-    mrr = evaluate(net,qrels,scores, to_rerank) #Evaluation is Slow
-    print_message('MRR:{}'.format(mrr))
+        mrr = evaluate(net,qrels,scores, to_rerank)
+        print_message('MRR @1000:{}'.format(mrr))
+        torch.cuda.empty_cache()
+        torch.save(net,'tensors.duet')
+    print_message('Done Training')
+    print_message('Evaluating')
     metrics = msmarco_eval.compute_metrics_from_files(QRELS,DATA_FILE_PREDICTOUT)
     print_message('#####################')
     for metric in sorted(metrics):
         print_message('{}: {}'.format(metric, metrics[metric]))
     print_message('#####################')            
+
 if __name__ == '__main__':
     main()
