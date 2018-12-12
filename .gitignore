@@ -9,6 +9,7 @@ Ranking/Baselines/data/top1000.eval.tsv
 Ranking/Baselines/data/triples.train.small.tsv
 Ranking/Baselines/data/triples.train.full.tsv
 Ranking/Baselines/data/collection.tsv
+Ranking/Baselines/data/fulldocuments.jsonl
 Ranking/Baselines/tensors.duet
 *.pyc
 
