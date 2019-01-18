@@ -26,10 +26,10 @@ POOLING_KERNEL_WIDTH_DOC        = 100
 NUM_POOLING_WINDOWS_DOC         = (MAX_DOC_TERMS - TERM_WINDOW_SIZE + 1) - POOLING_KERNEL_WIDTH_DOC + 1 # (200 - 3 + 1) - 100 + 1 = 99
 NUM_NGRAPHS                     = 0
 DROPOUT_RATE                    = 0.5
-MB_SIZE                         = 256
-EPOCH_SIZE                      = 1000
-NUM_EPOCHS                      = 100
-LEARNING_RATE                   = 1e-5
+MB_SIZE                         = 1024
+EPOCH_SIZE                      = 1024
+NUM_EPOCHS                      = 5
+LEARNING_RATE                   = 1e-3
 DATA_DIR                        = 'data'
 DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
