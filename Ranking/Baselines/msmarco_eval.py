@@ -4,7 +4,7 @@ Command line:
 python msmarco_eval_ranking.py <path_to_reference_file> <path_to_candidate_file>
 
 Creation Date : 06/12/2018
-Last Modified : 11/28/2018
+Last Modified : 1/21/2019
 Authors : Daniel Campos <dacamp@microsoft.com>, Rutger van Haasteren <ruvanh@microsoft.com>
 """
 import sys
@@ -133,7 +133,7 @@ def compute_metrics(qids_to_relevant_passageids, qids_to_ranked_candidate_passag
     
     MRR = MRR/len(qids_to_relevant_passageids)
     all_scores['MRR @10'] = MRR
-    all_scores['QueriesRanked'] = len(ranking)
+    all_scores['QueriesRanked'] = len(qids_to_ranked_candidate_passages)
     return all_scores
                 
 def compute_metrics_from_files(path_to_reference, path_to_candidate, perform_checks=True):
