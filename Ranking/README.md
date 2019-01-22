@@ -48,8 +48,27 @@ Size info
   808731 queries.train.tsv
  1010916 total
 ````
+#### Top1000
+These files are split between train, dev, and eval. For each query there are ~1000 passages which were retrived by BM25 from the 8.8m collection. The train set contains all examples(~550,000 queries) but to make evaluation faster we have segmented the dev and eval file to be 1/8 of the full size. In other words, dev and email are ~6800 queries out of the 55000 possible.
+````
+188714  1000052 foods and supplements to lower blood sugar      Watch portion sizes: â  Even healthy foods will cause high blood sugar if you eat too much. â  Make sure each of your meals has the same amount of CHOs. Avoid foods high in sugar: â  Some foods to avoid: sugar, honey, candies, syrup, cakes, cookies, regular soda and.
+1082792 1000084 what does the golgi apparatus do to the proteins and lipids once they arrive ?  Start studying Bonding, Carbs, Proteins, Lipids. Learn vocabulary, terms, and more with flashcards, games, and other study tools.
+995526  1000094 where is the federal penitentiary in ind        It takes THOUSANDS of Macy's associates to bring the MAGIC of MACY'S to LIFE! Our associate team is an invaluable part of who we are and what we do. F ind the seasonal job that's right for you at holiday.macysJOBS.com!
+199776  1000115 health benefits of eating vegetarian    The good news is that you will discover what goes into action spurs narrowing of these foods not only a theoretical supposition there are diagnosed with great remedy is said that most people and more can be done. Duncan was a wonderful can eating chicken cause gout benefits of natural. options with your health.
+660957  1000115 what foods are good if you have gout?   The good news is that you will discover what goes into action spurs narrowing of these foods not only a theoretical supposition there are diagnosed with great remedy is said that most people and more can be done. Duncan was a wonderful can eating chicken cause gout benefits of natural. options with your health.
+820267  1000130 what is the endocrine system responsible for?   The pancreas secretes pancreatic enzyme which is responsible for the breakdown of protein but it also secretes insulin so that we can get energy from glucose making it a part of the endocrine system or glands. The liver de-toxifies all of the blood that carries absorbed nutrients from the digestive system.
+837202  1000252 what is the nutritional value of oatmeal        Oats make an easy, balanced breakfast. One cup of cooked oatmeal contains about 150 calories, four grams of fiber (about half soluble and half insoluble), and six grams of protein. To boost protein further, my favorite way to eat oatmeal is with a swirl of almond butter nestled within.
+130825  1000268 definition for daring   Such a requirement would have three desirable consequences: First, it would tend to make bank executives more conservative and less daring in gambling with other people's money; second, it would put this liability of financial decision makers ahead of any taxpayer bailout in case of insolvency; and third, it would create a potentially powerful diseconomy of scale within big conglomerate banks.
+408149  1000288 is dhgate a scam        If you think you ve been targeted by a counterfeit check scam, report it to the following agencies: 1  The Federal Trade Commission or 1-877-FTC-HELP (1-877-382-4357). 2  The U.S. Postal Inspection Service or call your local post office. 3  The number is in the Blue Pages of your local telephone directory.ere s how to avoid a counterfeit check scam: 1  Throw away any offer that asks you to pay for a prize or a gift. 2  If it s free or a gift, a promotion or a sweepstakes, you shouldn t have to pay anything for it.
+345453  1000327 how to become a teacher assistant       Top 10 amazing movie makeup transformations. Biological chemistry, or biochemistry, is the study of the chemical composition of living organisms at a cellular level.omeone seeking a career in biological chemistry will usually need at least a bachelorâs degree. With a bachelorâs degree, an individual can qualify for a job as a science teacher at the high school level, a research assistant, laboratory technician, or a scientist in a testing environment.
+Size info
+````
+   6668967 top1000.dev.tsv
+   6515736 top1000.eval.tsv
+  13184703 total
+````
 #### Relevant Passages
-We have processed the train and dev set and made a QID to PID mapping of when a question has had a passage marked as relevant. We have held out the eval set but its distribution matches that of dev. 
+We have processed the train and dev set and made a QID to PID mapping of when a question has had a passage marked as relevant. We have held out the eval set but its distribution matches that of dev. As mentioned above, since since top1000.dev and top1000.eval are samples there exists qrels.dev.tsv(full qrels on 55,000 queries) and qrels.dev.small.tsv(which are the qrels corresponding to all queries in top1000.dev).
 ````
 1185869	0
 1185868	16
@@ -64,9 +83,12 @@ We have processed the train and dev set and made a QID to PID mapping of when a 
 ````
 Size info
 ````
-  45684 qrels.dev.tsv
- 401023 qrels.train.tsv
- 446707 total
+    7437 qrels.dev.small.tsv
+   59273 qrels.dev.tsv
+    7304 qrels.eval.small.tsv
+   59187 qrels.eval.tsv
+  532761 qrels.train.tsv
+  665962 total
 ````
 #### Triples.Train
 The `triples.train.<size>.tsv` are two files that we have created as an easy to consume training dataset. Each line of the TSV contains querytext, A relevant passage, and an non-relevant passage all separated by `\t`. The only difference between triples.train.full.tsv and triples.train.small.tsv is the smaller is ~10% of the overall size since the full sized train is > 270gbs.
@@ -76,24 +98,19 @@ Example line:
 what fruit is native to australia       Passiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.assiflora herbertiana. A rare passion fruit native to Australia. Fruits are green-skinned, white fleshed, with an unknown edible rating. Some sources list the fruit as edible, sweet and tasty, while others list the fruits as being bitter and inedible.   The kola nut is the fruit of the kola tree, a genus (Cola) of trees that are native to the tropical rainforests of Africa.
 ````
 
-#### Top1000
-We have produced the Top1000 for Dev and for Eval but just note they are just subsamples of 1000 queries because otherwise the file size balooned too large. 
-
 ### Evaluation
 Evaluation of systems will be done using MRR@10. We have selected such a low MRR number because the sizes of files candidates need to create quickly balloon with each additional depth. Official evaluation scripts is [Here](https://github.com/dfcf93/MSMARCOV2/blob/master/Ranking/Baselines/msmarco_eval.py).
 #### Rules
 Since the Passage Reranking dataset is based on the original MSMARCO dataset it is possible to use some of the exisiting ranking signals in the original dataset as a relevance signal. In other words people can leverage the connection between the query and the 10 Bing passages in the original dataset and could be used to promote those passages or mine them for query expansion terms (relevance feedback). To prevent confusion of model performance we as any team that uses any signals from the initial dataset to describe what they used and we will mark the run as special. In addition, if you use any outside signal(or internal signal) that you think we should know and make know to the larger community please include a description in your submision. 
-Nick.
 
 ### Submissions
 Once you have built a model that meets your expectations on evaluation with the dev set, you can submit your test results to get official evaluation on the test set. To ensure the integrity of the official test results, we do not release the correct answers for test set to the public. To submit your model for official evaluation on the test set, follow the below steps:
-Generate your proposed reranking for the Top1000 passages for the Eval set
+Generate your proposed reranking for the Top1000 passages for the Eval and the Dev set. To encourage reproducibility of results we encourage all teams to submit their code along with documentation and hyperparameters used.
 Submit the following information by [contacting us](mailto:ms-marco@microsoft.com?subject=MS%20Marco%20Submission)
-
 * Individual/Team Name: Name of the individual or the team to appear in the leaderboard [Required]
 * Individual/Team Institution: Name of the institution of the individual or the team to appear in the leaderboard [Optional]
 * Model information: Name of the model/technique to appear in the leaderboard [Required]
 * Paper Information: Name, Citation, URL of the paper if model is from a published work to appear in the leaderboard [Optional]
-
+* Code Information: A github repo of your model, instruction of how to use, etc [Optional]
 
 To avoid "P-hacking" we discourage too many submissions from the same group in a short period of time. Because submissions don't require the final trained model we also retain the right to request a model to validate the results being submitted
