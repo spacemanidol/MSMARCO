@@ -128,11 +128,10 @@ def compute_metrics(qids_to_relevant_passageids, qids_to_ranked_candidate_passag
                     ranking.pop()
                     ranking.append(i+1)
                     break
-
     if len(ranking) == 0:
         raise IOError("No matching QIDs found. Are you sure you are scoring the evaluation set?")
     
-    MRR = MRR/len(ranking)
+    MRR = MRR/len(qids_to_relevant_passageids)
     all_scores['MRR @10'] = MRR
     all_scores['QueriesRanked'] = len(ranking)
     return all_scores
