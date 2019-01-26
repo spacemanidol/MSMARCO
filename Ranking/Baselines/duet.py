@@ -35,7 +35,7 @@ DATA_FILE_NGRAPHS               = os.path.join(DATA_DIR, "ngraphs.txt")
 DATA_FILE_IDFS                  = os.path.join(DATA_DIR, "idf.norm.tsv")
 DATA_FILE_TRAIN                 = os.path.join(DATA_DIR, "triples.train.full.tsv")
 DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tiny.tsv")
-#DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
+DATA_FILE_PREDICT                = os.path.join(DATA_DIR, "top1000.dev.tsv")
 DATA_FILE_PREDICTOUT              = os.path.join(DATA_DIR, "ranked.dev.tsv")
 QRELS                       = os.path.join(DATA_DIR, "qrels.dev.tsv")
 
@@ -355,7 +355,7 @@ def load_file_to_rerank(filename, offset):
 
 
 def main():
-    READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True, 256)
+    READER_TRAIN  = DataReader(DATA_FILE_TRAIN, 0, True,  MB_SIZE)
     qrels, scores = load_file_to_rerank(QRELS, 1)
     _, to_rerank = load_file_to_rerank(DATA_FILE_PREDICT,0)
     torch.manual_seed(1)
@@ -376,6 +376,8 @@ def main():
         mrr = evaluate(net,qrels,scores, to_rerank)
         print_message('MRR @1000:{}'.format(mrr))
         torch.cuda.empty_cache()
+        filename = "{}-tensors.duet".format(ep_idx)
+        torch.save(net, filename)
         torch.save(net,'tensors.duet')
     print_message('Done Training')
     print_message('Evaluating')
