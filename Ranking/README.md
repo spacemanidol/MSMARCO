@@ -114,4 +114,4 @@ Submit the following information by [contacting us](mailto:ms-marco@microsoft.co
 * Paper Information: Name, Citation, URL of the paper if model is from a published work to appear in the leaderboard [Optional]
 * Code Information: A github repo of your model, instruction of how to use, etc [Optional]
 
-To avoid "P-hacking" we discourage too many submissions from the same group in a short period of time. Because submissions don't require the final trained model we also retain the right to request a model to validate the results being submitted
+To avoid "P-hacking" we limit teams/individuals to 1 per week and we will update the leaderboard to include all submisions by such teams, not just the most recent. 
