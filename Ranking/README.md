@@ -7,7 +7,7 @@ To generate the ranking task dataset we started with the regular MSMARCO dataset
 
 We collected all unique passages(without any normalization) to make a pool of ~8.8 million unique passages. Then, for each query from the existing MSMARCO splits(train,dev, and eval) we ran a standard [BM25](https://en.wikipedia.org/wiki/Okapi_BM25) to produce 1000 relevant passages. These were ordered by random so each query now has 1000 corresponding passages. Since the original 10 passages presented with the query were extracted using the Bing ranking stack it possible that even none of the original passages are present with this new top 1000.
 
-During the initial dataset creation, the judges would mark any passage that could answer the query which we then translated into our is_selected labels(relevant/used passages have is_selected=1). If a passage had is_selected=1 then this is a relevant query passage pair. It is worth noting that with these labels a positive is a true positive but negatives may not be a true negative(in other words there may ne relevant passages with is_selected=0). It is also worth noting that not all 1000 passages were seen by a judge and even ifWhile this means that it is possible for a system to find more relevant passages
+During the initial dataset creation, the judges would mark any passage that could answer the query which we then translated into our is_selected labels(relevant/used passages have is_selected=1). If a passage had is_selected=1 then this is a relevant query passage pair. It is worth noting that with these labels a positive is a true positive but negatives may not be a true negative(in other words there may be relevant passages with is_selected=0). It is also worth noting that not all 1000 passages were seen by a judge and even ifWhile this means that it is possible for a system to find more relevant passages
 
 To evaluate how well a system is reranking these 1000 relevant passages we use the already existing is_selected flag present in the v2.1 dataset. Given these labels on relevancy, a systems goal should be to rank any of the most relevant passage as high as possible. During the initial dataset creation, the judges would mark any passage that could answer the query which we then translated into our is_selected labels(relevant/used passages have is_selected=1). It is worth noting that with these labels a positive is a true positive but negatives may not be a true negative(in other words there may ne relevant passages with is_selected=0). It is also worth noting that not all 1000 passages were seen by a judge meaning it is possible that there are relevant passages that for purposed of this dataset are not considered relevant. 
 
@@ -15,7 +15,7 @@ Finally, understanding that this ranking data may not be useful to train a Deep 
 ~270gb respectively)). These triples contain a query followed by a passage that has been marked as directly relevant(positive example) and another passage that has not been marked as relevant(negative). We understand that there could be a situtation where a one of the negative examples could actually be more relevant than the positive example but given the task goal is to rank the passages where we have a relevance passage as high as possible so this shouldn't be an issue. 
 
 ### Data, information, and Formating
-Given that all files have been generated from the v2.1 dataset meaning that in theory anyone can generate the files we provide to their own specifications and liking. We will hopefully opensource our productin data shortly.
+Given that all files have been generated from the v2.1 dataset meaning that in theory anyone can generate the files we provide to their own specifications and liking. We will hopefully opensource our production data shortly.
 #### Passage to PassageID
 This file contains each unique Passage in the larger MSMARCO dataset. Format is PID to Passage
 ````
@@ -49,7 +49,7 @@ Size info
  1010916 total
 ````
 #### Top1000
-These files are split between train, dev, and eval. For each query there are ~1000 passages which were retrived by BM25 from the 8.8m collection. The train set contains all examples(~550,000 queries) but to make evaluation faster we have segmented the dev and eval file to be 1/8 of the full size. In other words, dev and email are ~6800 queries out of the 55000 possible.
+These files are split between train, dev, and eval. For each query there are ~1000 passages which were retrived by BM25 from the 8.8m collection. The train set contains all examples(~550,000 queries) but to make evaluation faster we have segmented the dev and eval file to be 1/8 of the full size. In other words, dev and eval are ~6800 queries out of the 55000 possible.
 ````
 188714  1000052 foods and supplements to lower blood sugar      Watch portion sizes: â  Even healthy foods will cause high blood sugar if you eat too much. â  Make sure each of your meals has the same amount of CHOs. Avoid foods high in sugar: â  Some foods to avoid: sugar, honey, candies, syrup, cakes, cookies, regular soda and.
 1082792 1000084 what does the golgi apparatus do to the proteins and lipids once they arrive ?  Start studying Bonding, Carbs, Proteins, Lipids. Learn vocabulary, terms, and more with flashcards, games, and other study tools.
