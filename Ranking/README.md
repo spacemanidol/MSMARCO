@@ -69,18 +69,18 @@ Size info
   13184703 total
 ````
 #### Relevant Passages
-We have processed the train and dev set and made a QID to PID mapping of when a question has had a passage marked as relevant. We have held out the eval set but its distribution matches that of dev. As mentioned above, since since top1000.dev and top1000.eval are samples there exists qrels.dev.tsv(full qrels on 55,000 queries) and qrels.dev.small.tsv(which are the qrels corresponding to all queries in top1000.dev).
+We have processed the train and dev set and made a QID to PID mapping of when a question has had a passage marked as relevant. We have held out the eval set but its distribution matches that of dev. As mentioned above, since since top1000.dev and top1000.eval are samples there exists qrels.dev.tsv(full qrels on 55,000 queries) and qrels.dev.small.tsv(which are the qrels corresponding to all queries in top1000.dev). Column 0 is queryID, column 2 is passageID
 ````
-1185869	0
-1185868	16
-1185854	1176003
-1185755	2205805
-1184773	3214435
-467556	5149343
-44588	6986092
-410717	6830906
-1174761	754254
-605123	965816
+1185869 0       0       1
+1185868 0       16      1
+597651  0       49      1
+403613  0       60      1
+1183785 0       389     1
+312651  0       616     1
+80385   0       723     1
+645590  0       944     1
+645337  0       1054    1
+186154  0       1160    1
 ````
 Size info
 ````
