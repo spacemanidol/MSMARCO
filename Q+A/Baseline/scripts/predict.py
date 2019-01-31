@@ -180,7 +180,8 @@ def main():
     with open(args.dest, 'w') as f_o:
         for qid, toks, start, end in predict(model, data):
             toks = ' '.join(id_to_token[tok] for tok in toks)
-            print(repr(qid), repr(toks), start, end, file=f_o)
+            #print(repr(qid), repr(toks), start, end, file=f_o)
+            print("{\"query_id": {}, \"answers\": [\"{}\"]}".format(repr(qid), pepr(toks))
 
     return
 
