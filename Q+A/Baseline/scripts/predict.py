@@ -181,7 +181,7 @@ def main():
         for qid, toks, start, end in predict(model, data):
             toks = ' '.join(id_to_token[tok] for tok in toks)
             #print(repr(qid), repr(toks), start, end, file=f_o)
-            print("{\"query_id": {}, \"answers\": [\"{}\"]}".format(repr(qid), pepr(toks))
+            print("{\"query_id\": {}, \"answers\": [\"{}\"]}".format(repr(qid), pepr(toks))
 
     return
 
