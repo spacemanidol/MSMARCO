@@ -4,14 +4,16 @@ Training script: load a config file, create a new model using it,
 then train that model.
 """
 import json
+import random
 import yaml
 import argparse
 import os.path
-
+import re
 import numpy as np
 import torch
 import h5py
-
+regex_drop_char                = re.compile('[^a-z0-9\s]+')
+regex_multi_space              = re.compile('\s+')
 from mrcqa import BidafModel
 
 from dataset import load_data, tokenize_data, EpochGen
@@ -176,13 +178,20 @@ def main():
 
     if torch.cuda.is_available() and args.cuda:
         data.tensor_type = torch.cuda.LongTensor
-
+    qid2candidate = {}
+    for qid, toks, start, end in predict(model, data):
+        toks = regex_multi_space.sub(' ', regex_drop_char.sub(' ', ' '.join(id_to_token[tok] for tok in toks).lower())).strip()
+        #print(repr(qid), repr(toks), start, end, file=f_o)
+        output = '{\"query_id\": '+ qid + ',\"answers\":[ \"' + toks + '\"]}'
+        if qid not in qid2candidate:
+            qid2candidate[qid] = []
+        qid2candidate[qid].append(json.dumps(json.loads(output)))
     with open(args.dest, 'w') as f_o:
-        for qid, toks, start, end in predict(model, data):
-            toks = ' '.join(id_to_token[tok] for tok in toks)
-            #print(repr(qid), repr(toks), start, end, file=f_o)
-            print("{\"query_id\": {}, \"answers\": [\"{}\"]}".format(repr(qid), pepr(toks))
-
+        for qid in qid2candidate:
+            #For our leaderboard model we build another model that predicted which passage would be most likley to produce the output. for simplicity we just pick one at random.
+            pick = random.randint(0,len(qid2candidate[qid])-1)
+            f_o.write(qid2candidate[qid][pick])
+            f_o.write('\n')
     return
 
 
