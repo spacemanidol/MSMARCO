@@ -1,16 +1,19 @@
 Q+A/Baseline/exp/
 Q+A/Baseline/mrcqa/__pycache__/
 Q+A/Baseline/scripts/__pycache__/
-Ranking/Baselines/__pycache__/
-Ranking/Baselines/data/qrels.*
 Q+A/Evaluation/i.txt
 Q+A/Evaluation/n.txt
 Q+A/data/*
 Ranking/Baselines/data/top1000.*
+Ranking/Baselines/data/queries.*
 Ranking/Baselines/data/ranked*
 Ranking/Baselines/data/triples.train.*
 Ranking/Baselines/data/collection.tsv
+Ranking/Baselines/data/qrels.*
 Ranking/Baselines/data/fulldocuments.jsonl
+Ranking/Baselines/__pycache__/
 Ranking/Baselines/tensors.duet
+KeyPhraseExtraction/100k.tsv
+KeyPhraseExtraction/85k.tsv
 *.pyc
 
