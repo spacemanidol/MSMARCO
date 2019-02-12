@@ -15,5 +15,6 @@ Ranking/Baselines/__pycache__/
 Ranking/Baselines/tensors.duet
 KeyPhraseExtraction/100k.tsv
 KeyPhraseExtraction/85k.tsv
+ConversationalSearch/data/*
 *.pyc
 
