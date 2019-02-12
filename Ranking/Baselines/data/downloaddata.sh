@@ -1,7 +1,4 @@
-wget https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz
-wget https://msmarco.blob.core.windows.net/msmarcoranking/queries.tar.gz
-wget https://msmarco.blob.core.windows.net/msmarcoranking/qrels.train.tsv
-wget https://msmarco.blob.core.windows.net/msmarcoranking/qrels.dev.tsv
+wget https://msmarco.blob.core.windows.net/msmarcoranking/collectionandqueries.tar.gz
 wget https://msmarco.blob.core.windows.net/msmarcoranking/fulldocuments.jsonl.gz
 wget https://msmarco.blob.core.windows.net/msmarcoranking/triples.train.small.tar.gz
 wget https://msmarco.blob.core.windows.net/msmarcoranking/triples.train.full.tar.gz
