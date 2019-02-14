@@ -1,0 +1,5 @@
+Done reading MSMARCO
+Done reading quora
+Done reading NQ
+There are 1010916 unique MSMARCO Queries, 537359 unique Quora Duplicate Queries, 315203 unique NQ Queries for a total of 1862849 unique queries.
+
