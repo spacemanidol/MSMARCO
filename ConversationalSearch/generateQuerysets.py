@@ -1,6 +1,9 @@
 import json
+<<<<<<< HEAD
 import sys
 import os
+=======
+>>>>>>> 544545b189773dd586c6c2aaa560f686432321aa
 def loadNQ(dirPath):
     files = os.listdir(dirPath)
     queries = set()
@@ -18,9 +21,14 @@ def loadQuora(filename):
     with open(filename) as f:
         for l in f:
             l = l.strip().split('\t')
+<<<<<<< HEAD
             if len(l) > 4:
                 queries.add(l[3])
                 queries.add(l[4])
+=======
+            queries.add(l[3])
+            queries.add(l[4])
+>>>>>>> 544545b189773dd586c6c2aaa560f686432321aa
     return queries
 def loadMSMARCO(files):
     #1048578 cost of endless pools/swim spa
@@ -30,6 +38,7 @@ def loadMSMARCO(files):
             for l in f:
                 queries.add(l.strip().split('\t')[1])
     return queries       
+<<<<<<< HEAD
 def loadUnusedMSMARCO(filename):
     #AnswerIsInPassage\tJudgeID\tHitGroupDataInt\tHitDataInt\tHitState\tJudgmentState\tJudgmentDataInt\tJudgmentDataIntName\tJudgmentSubmitTime\tJudgmentTypeID\tTimeSpentOnJudgment\tHitGroupID\tHitID\tQueryId\tQueryText\tPassagesJson\tJudgmentID\tjudgment\tanswerTextArea\tnopassageSubmit\texplainNoAnswer\texplainCantJudge\tSL_locer\tSL_lng_from\tSL_lng_to\tJudgmentType\tGoldHitType\tGoldHitComments\t@RealTimeAuditComment\tConsensus\n'
     queries = set
@@ -91,3 +100,29 @@ if __name__ == "__main__":
         print("Done reading Unused")
         sessions, realQueries = loadSessions(sys.argv[7])
         writeData(msmarcoQueries, quoraQueries, nqQueries, unusedMSMARCO, realQueries, sessions)
+=======
+def writeData(msmarcoQueries, quoraQueries, nqQueries, dirPath)
+    allQueries = msmarcoQueries + quoraQueries + nqQueries
+    print("There are {} unique MSMARCO Queries, {} unique Quora Duplicate Queries, {} unique NQ Queries for a total of {} unique queries.".format(len(msmarcoQueries), len(quoraQueries), len(nqQueries), len(allQueries)))
+    with open(os.path.join(dirPath, 'msmarcoQueries.tsv'),'w') as w:
+        for query in msmarcoQueries:
+            w.write('{}\n'.format(query))
+    with open(os.path.join(dirPath, 'quoraQueries.tsv'),'w') as w:
+        for query in quoraQueries:
+            w.write('{}\n'.format(query))
+    with open(os.path.join(dirPath, 'nqQueries.tsv'),'w') as w:
+        for query in nqQueries:
+            w.write('{}\n'.format(query))
+    with open(os.path.join(dirPath, 'allQueries.tsv'),'w') as w:
+        for query in allQueries:
+            w.write('{}\n'.format(query))
+if __name__ == "__main__":
+    if len(sys.argv) != 6:
+        print("Usage: generateQuerysets.py <msmarco train queries> <msmarco dev queries> <msmarco eval queries> <quoraQueries> <NQFolder> <outputFolder>")
+        exit(-1)
+    else:
+        msmarcoQueries = loadMSMARCO([sys.argv[1],sys.argv[2],sys.argv[3]])
+        quoraQueries = loadQuora(sys.argv[4])
+        nqQueries = loadNQ(sys.argv[5])
+        writeData(msmarcoQueries, quoraQueries, nqQueries, sys.argv[6])
+>>>>>>> 544545b189773dd586c6c2aaa560f686432321aa
