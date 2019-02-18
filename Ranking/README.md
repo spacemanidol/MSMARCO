@@ -101,6 +101,20 @@ what fruit is native to australia       Passiflora herbertiana. A rare passion f
 
 ### Evaluation
 Evaluation of systems will be done using MRR@10. We have selected such a low MRR number because the sizes of files candidates need to create quickly balloon with each additional depth. Official evaluation scripts is [Here](https://github.com/dfcf93/MSMARCOV2/blob/master/Ranking/Baselines/msmarco_eval.py).
+
+Expected format for your submission is a file including qid\tpid\trank for each query/top 1000 in the eval file on the website. To minimize space feel free to only inclde the top 100 or 10 passages.
+````
+1124703 8766037 1
+1124703 8021997 2
+1124703 7816201 3
+1124703 8296123 4
+1124703 8790898 5
+1124703 5451590 6
+1124703 8021999 7
+1124703 8388210 8
+1124703 8702520 9
+1124703 8790903 10
+````
 #### Rules
 Since the Passage Reranking dataset is based on the original MSMARCO dataset it is possible to use some of the exisiting ranking signals in the original dataset as a relevance signal. In other words people can leverage the connection between the query and the 10 Bing passages in the original dataset and could be used to promote those passages or mine them for query expansion terms (relevance feedback). To prevent confusion of model performance we as any team that uses any signals from the initial dataset to describe what they used and we will mark the run as special. In addition, if you use any outside signal(or internal signal) that you think we should know and make know to the larger community please include a description in your submision. 
 
