@@ -31,7 +31,7 @@ def getVectors(queries, key, filename):
                 continue
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print('Usage: getQueryVectors <url> <queryFile> <outputfile>')
+        print('Usage:generateQueryEmbeddings.py <url> <queryFile> <outputfile>')
         exit(-1)
     else:
         queries = loadQueries(sys.argv[2])
