@@ -8,20 +8,26 @@ def loadQueries(filename):
         for l in f:
             queries.append(l.strip())
     return queries
+def process(queryPack, response):
+    output = ''
+    for i in range(len(queryPack)):
+        output += "{}\t".format(queryPack[i])
+        for j in range(len(response[i])):
+            output += "{} ".format(response[i][j])
+        output += "\n"
+    return output
 def getVectors(queries, filename):
     i = 1
     bc = BertClient()
     query = 'who founded microsoft'
     print("Testing bc\nTesting Query:{}\nVector:{}".format(query, bc.encode([query])[0]))
     with open(filename,'w') as w:
-        for query in queries:
-            if i % 1000 == 0:
-                print('{} vectors retrieved'.format(i))
-                time.sleep(100) #my computer is small and gets too hot too quick
-            try:
-                w.write("{}\t{}\n".format(query, bc.encode([query])[0]))
-            except:
-                continue
+        for j in range(0,len(queries), 100):
+            if i % 100 == 0:
+                print('{} vectors retrieved'.format(i*100))
+            queryPack = queries[j:j+100]
+            response = bc.encode(queryPack)
+            w.write(process(queryPack, response))
             i += 1
 if __name__ == "__main__":
     if len(sys.argv) != 3:
