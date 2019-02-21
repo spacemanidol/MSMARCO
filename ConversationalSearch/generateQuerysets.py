@@ -78,7 +78,7 @@ def writeData(msmarcoQueries, quoraQueries, nqQueries, unusedMSMARCOQueries, rea
             w.write('{}\n'.format(sessions[session][-1]))
 if __name__ == "__main__":
     if len(sys.argv) != 8:
-        print("Usage: generateQuerysets.py <msmarco train queries> <msmarco dev queries> <msmarco eval queries> <quoraQueries> <NQFolder>")
+        print("Usage: generateQuerysets.py <msmarco train queries> <msmarco dev queries> <msmarco eval queries> <quoraQueries> <NQFolder> <unused msmarco> <sessions>")
         exit(-1)
     else:
         msmarcoQueries = loadMSMARCO([sys.argv[1],sys.argv[2],sys.argv[3]])
@@ -92,4 +92,5 @@ if __name__ == "__main__":
         unusedMSMARCO = []
         print("Done reading Unused")
         sessions, realQueries = loadSessions(sys.argv[7])
+        print("Done reading Sessions")
         writeData(msmarcoQueries, quoraQueries, nqQueries, unusedMSMARCO, realQueries, sessions)
