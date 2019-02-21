@@ -10,7 +10,7 @@ def loadPassages(filename):
     with open(filename,'r') as f:
         for l in f:
             l = l.strip().split('\t')
-            i = l[0]
+            i = int(l[0])
             passages[i] = regex_multi_space.sub(' ', regex_drop_char.sub(' ', ' '.join(l[1:]).lower())).strip()
     return passages
 def process(passageIDs, response):
@@ -24,8 +24,8 @@ def process(passageIDs, response):
 def getVectors(passages, filename):
     i = 0
     bc = BertClient()
-    passages = 'In June 1942, the United States Army Corps of Engineersbegan the Manhattan Project- The secret name for the 2 atomic bombs.'
-    print("Testing bc\nTesting passages:{}\nVector:{}".format(passages, bc.encode([passages])[0]))
+    passage = 'In June 1942, the United States Army Corps of Engineersbegan the Manhattan Project- The secret name for the 2 atomic bombs.'
+    print("Testing bc\nTesting passages:{}\nVector:{}".format(passages, bc.encode([passage])[0]))
     passagePack = []
     passageIDs = []
     packSize = 100
@@ -38,9 +38,9 @@ def getVectors(passages, filename):
                 w.write(process(passageIDs, response))
                 passageIDs = []
                 passagePack = []
+                i += 1
             passageIDs.append(passageID)
             passagePack.append(passages[passageID])
-            i += 1
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print('Usage: generatePassagesEmbeddingsBERT.py <passagesFile> <outputfile>')
