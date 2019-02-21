@@ -15,7 +15,7 @@ def loadQueries(filename):
 
 def loadSessions(filename):
     sessions = []
-    with open(filename,'r'):
+    with open(filename,'r') as f:
         for l in f:
             sessions.append(l.strip().split('\t'))
     return sessions
