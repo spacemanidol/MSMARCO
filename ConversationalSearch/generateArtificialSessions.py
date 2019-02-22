@@ -76,7 +76,7 @@ def generateArtificialSessions(realQueryVectors, artificialQueryVectors, session
                         output += '{}\t'.format(artificialQuery)
                         break
                 if replacementFound == False:
-                    properArtificialSetGenerated = False:
+                    properArtificialSetGenerated = False
                     break
             if properArtificialSetGenerated == True:       
                 w.write("{}\n".format(output[:-1]))
