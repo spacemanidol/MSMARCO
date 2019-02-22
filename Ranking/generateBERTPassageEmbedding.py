@@ -22,19 +22,19 @@ def process(passageIDs, response):
         output += "\n"
     return output
 def getVectors(passages, filename):
-    i = 0
+    i = 1
     bc = BertClient()
     passage = 'In June 1942, the United States Army Corps of Engineersbegan the Manhattan Project- The secret name for the 2 atomic bombs.'
-    print("Testing bc\nTesting passages:{}\nVector:{}".format(passages, bc.encode([passage])[0]))
+    print("Testing bc\nTesting passages:{}\nVector:{}".format(passage, bc.encode([passage])[0]))
     passagePack = []
     passageIDs = []
     packSize = 100
     with open(filename,'w') as w:
         for passageID in passages:
             if i % 100 == 0:
-                print('{} vectors retrieved'.format(i*packSize))
+                print('{} vectors retrieved'.format((i-1)*packSize))
             if len(passagePack) == packSize:
-                response = bc.encode(passagesPack)
+                response = bc.encode(passagePack)
                 w.write(process(passageIDs, response))
                 passageIDs = []
                 passagePack = []

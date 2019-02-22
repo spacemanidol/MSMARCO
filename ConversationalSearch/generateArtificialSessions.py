@@ -4,7 +4,7 @@ import numpy as np
 import sys
 from annoy import AnnoyIndex
 
-TREESIZE = 10000
+TREESIZE = 1000
 
 def loadQueries(filename):
     queries = set()
@@ -84,11 +84,11 @@ if __name__ == "__main__":
         print("Building Annnoy Query Embeddings")
         annoyEmbedding = generateAnnoy(real, artificial, sys.argv[4], 100)
         print("Generating Sessions Query Embeddings")
-        generateArtificialSessions(queryVectors, sessions, annoyEmbedding, filename)
+        generateArtificialSessions(artificial, sessions, annoyEmbedding, 'sessionsEmbedding.tsv')
         #Run on BERT embeddings
         print("Loading BERT Vectors")
         real, artificial = loadVectors(sys.argv[3], realQueries)
         print("Building Annnoy Query Embeddings")
         annoyEmbedding = generateAnnoy(real, artificial, 'BERT' + sys.argv[4], 1024)
         print("Generating Sessions Query Embeddings")
-        generateArtificialSessions(queryVectors, sessions, annoyEmbedding, filename)
+        generateArtificialSessions(artificial, sessions, annoyEmbedding, 'sessionsEmbeddingBERT.tsv')
