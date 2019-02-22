@@ -19,18 +19,8 @@ def loadSessions(filename):
         for l in f:
             sessions.append(l.strip().split('\t'))
     return sessions
-a = set()
-for q in realQueries:
-    if q not in real[0]:
-        a.add(q)
-    
-for q in artificialQueries:
-    if q not in artificial[0]:
-        a.add(q)
 
-a = list(a)
-getVectors(a, url, 'test')
-real, artificial = loadVectors(filename, realQueries, artificialQueries)
+
 def loadVectors(filename, realQueries, artificialQueries):
     i = 0
     j = 0
@@ -66,51 +56,52 @@ def generateAnnoy(real, artificial, annoyFilename, dimensions):
 
 def generateArtificialSessions(realQueryVectors, artificialQueryVectors, sessions, annoyEmbedding, filename):
     with open(filename,'w') as w:
-for session in sessions:
-    queriesUsed = set()
-    output = ''
-    for query in session:
-        if query not in realQueryVectors[0]:#Lookup issue so cant print session
-            break
-        vectorIndex = realQueryVectors[0][query]
-        v = queryVectors[2][vectorIndex]
-        artificialQueries = annoyEmbedding.get_nns_by_vector(v, 10, search_k=-1, include_distances=False)
-        for i in range(len(artificialQueries) - 1):
-            queryId = artificialQueries[i]
-            artificialQuery = artificialQueryVectors[1][queryID]
-            if artificialQuery not in queriesUsed: #ensure session isnt just repeating queries
-                queriesUsed.add(artificialQuery)
-                output += '{}\t'.format(artificialQuery)
-                break
-        queryId = artificialQueries[len(artificialQueries)]
-        artificialQuery = artificialQueryVectors[1][queryID]
-        if  artificialQuery not in queriesUsed:
-            w.write('{}{}\n'.format(output,artificialQuery))
-        else:
-
-                        w.write("{}\n".format(output[:-1]))
+        for session in sessions:
+            queriesUsed = set()
+            output = ''
+            properArtificialSetGenerated = True
+            for query in session:
+                if query not in realQueryVectors[0]:#Lookup issue so cant print session
+                    break
+                vectorIndex = realQueryVectors[0][query]
+                v = queryVectors[2][vectorIndex]
+                artificialQueries = annoyEmbedding.get_nns_by_vector(v, 10, search_k=-1, include_distances=False)
+                replacementFound = False
+                for i in range(len(artificialQueries)):
+                    queryId = artificialQueries[i]
+                    artificialQuery = artificialQueryVectors[1][queryID]
+                    if artificialQuery not in queriesUsed: #ensure session isnt just repeating queries
+                        queriesUsed.add(artificialQuery)
+                        replacementFound = True
+                        output += '{}\t'.format(artificialQuery)
+                        break
+                if replacementFound == False:
+                    properArtificialSetGenerated = False:
+                    break
+            if properArtificialSetGenerated:       
+                w.write("{}\n".format(output[:-1]))
     
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        print("Usage: makeArtificialSessions.py <realQueries> <queryVectors> <BERTVectors> <annFilename> <sessions>")
+    if len(sys.argv) != 7:
+        print("Usage: makeArtificialSessions.py <realQueries> <artificialQueries> <queryVectors> <BERTVectors> <annFilename> <sessions>")
         exit(-1)
     else:
         print("Loading Queries and Sessions")
         realQueries = loadQueries(sys.argv[1])
         artificialQueries = loadQueries(sys.argv[2])
         print("Loading Sessions")
-        sessions = loadSessions(sys.argv[5])
+        sessions = loadSessions(sys.argv[6])
         #Run regular embeddings
         print("Loading Query Vectors")
-        real, artificial = loadVectors(sys.argv[2], realQueries, artificialQueries)
+        real, artificial = loadVectors(sys.argv[3], realQueries, artificialQueries)
         print("Building Annnoy Query Embeddings")
-        annoyEmbedding = generateAnnoy(real, artificial, sys.argv[4], 100)
+        annoyEmbedding = generateAnnoy(real, artificial, sys.argv[5], 100)
         print("Generating Sessions Query Embeddings")
         generateArtificialSessions(real,artificial, sessions, annoyEmbedding, 'sessionsEmbedding.tsv')
         #Run on BERT embeddings
         print("Loading BERT Vectors")
-        real, artificial = loadVectors(sys.argv[3], realQueries)
+        real, artificial = loadVectors(sys.argv[4], realQueries)
         print("Building Annnoy Query Embeddings")
-        annoyEmbedding = generateAnnoy(real, artificial, 'BERT' + sys.argv[4], 1024)
+        annoyEmbedding = generateAnnoy(real, artificial, 'BERT' + sys.argv[5], 1024)
         print("Generating Sessions Query Embeddings")
         generateArtificialSessions(real, artificial, sessions, annoyEmbedding, 'sessionsEmbeddingBERT.tsv')
