@@ -64,7 +64,7 @@ def generateArtificialSessions(realQueryVectors, artificialQueryVectors, session
                 if query not in realQueryVectors[0]:#Lookup issue so cant print session
                     break
                 vectorIndex = realQueryVectors[0][query]
-                v = queryVectors[2][vectorIndex]
+                v = realQueryVectors[2][vectorIndex]
                 artificialQueries = annoyEmbedding.get_nns_by_vector(v, 10, search_k=-1, include_distances=False)
                 replacementFound = False
                 for i in range(len(artificialQueries)):
