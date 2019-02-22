@@ -7,6 +7,7 @@ def loadQueries(filename):
         for l in f:
             queries.append(l.strip())
     return queries
+
 def generateOuput(responses):
     output = ''
     for response in responses:
@@ -15,6 +16,7 @@ def generateOuput(responses):
             output += '{} '.format(v)
         output += '{}\n'.format(response['vector'][-1])
     return output
+
 def getVectors(queries, key, filename):
     chunks = []
     count = 1
@@ -28,7 +30,14 @@ def getVectors(queries, key, filename):
             try:
                 w.write(generateOuput(requests.get(url=key + str(chunk) + "}").json()))
             except:
-                continue
+                try:
+                    w.write(generateOuput(requests.get(url=key + str(chunk) + "}").json()))
+                except:
+                    try:
+                        w.write(generateOuput(requests.get(url=key + str(chunk) + "}").json()))
+                    except:
+                        #Its dirty but sometimes the API fails and this is the easiest fix
+                        continue
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print('Usage:generateQueryEmbeddings.py <url> <queryFile> <outputfile>')

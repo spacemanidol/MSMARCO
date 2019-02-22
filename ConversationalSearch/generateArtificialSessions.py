@@ -53,21 +53,22 @@ def generateAnnoy(real, artificial, annoyFilename, dimensions):
     t.save(annoyFilename)
     return t
 
-def generateArtificialSessions(queryVectors, sessions, annoyEmbedding, filename):
+def generateArtificialSessions(realQueryVectors, artificialQueryVectors, sessions, annoyEmbedding, filename):
     with open(filename,'w') as w:
         for session in sessions:
             queriesUsed = set()
             output = ''
-            for query in sessions[session]:
-                vectorIndex = queryVectors[0][query]
+            for query in session:
+                vectorIndex = realQueryVectors[0][query]
                 v = queryVectors[2][vectorIndex]
                 artificialQueries = annoyEmbedding.get_nns_by_vector(v, 10, search_k=-1, include_distances=False)
-                for artificialQuery in artificialQueries:
+                for queryID in artificialQueries:
+                    artificialQuery = artificialQueryVectors[1][queryID]
                     if artificialQuery not in queriesUsed: #ensure session isnt just repeating queries
                         queriesUsed.add(artificialQuery)
                         output += '{}\t'.format(artificialQuery)
                         break
-            w.write("{}\n".format(output[:-1]))
+                        w.write("{}\n".format(output[:-1]))
     
 if __name__ == "__main__":
     if len(sys.argv) != 6:
@@ -84,11 +85,11 @@ if __name__ == "__main__":
         print("Building Annnoy Query Embeddings")
         annoyEmbedding = generateAnnoy(real, artificial, sys.argv[4], 100)
         print("Generating Sessions Query Embeddings")
-        generateArtificialSessions(artificial, sessions, annoyEmbedding, 'sessionsEmbedding.tsv')
+        generateArtificialSessions(real,artificial, sessions, annoyEmbedding, 'sessionsEmbedding.tsv')
         #Run on BERT embeddings
         print("Loading BERT Vectors")
         real, artificial = loadVectors(sys.argv[3], realQueries)
         print("Building Annnoy Query Embeddings")
         annoyEmbedding = generateAnnoy(real, artificial, 'BERT' + sys.argv[4], 1024)
         print("Generating Sessions Query Embeddings")
-        generateArtificialSessions(artificial, sessions, annoyEmbedding, 'sessionsEmbeddingBERT.tsv')
+        generateArtificialSessions(real, artificial, sessions, annoyEmbedding, 'sessionsEmbeddingBERT.tsv')
