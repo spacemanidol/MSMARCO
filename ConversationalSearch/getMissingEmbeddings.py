@@ -16,12 +16,12 @@ def generateOuput(responses):
 def getVectors(queries, key, filename):
     chunks = []
     count = 1
-    for i in range(0, len(queries), 10): 
-        chunks.append(queries[i:i+10])
+    for i in range(0, len(queries), 1): 
+        chunks.append(queries[i:i+1])
     with open(filename,'w') as w:
         for i, chunk in enumerate(chunks):
-            if i % 100 == 0:
-                print('{} vectors retrieved'.format(i*10))
+            if i % 1000 == 0:
+                print('{} vectors retrieved'.format(i))
             i += 1
             try:
                 w.write(generateOuput(requests.get(url=key + str(chunk) + "}").json()))
@@ -76,7 +76,6 @@ for q in realQueries:
 for q in artificialQueries:
     if q not in artificial[0]:
         a.add(q)
-
-
+print(len(a))
 a = list(a)
 getVectors(a, url, 'missing')
