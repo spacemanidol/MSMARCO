@@ -17,4 +17,7 @@ KeyPhraseExtraction/100k.tsv
 KeyPhraseExtraction/85k.tsv
 ConversationalSearch/data/*
 *.pyc
+__pycache__/
+.ipynb_checkpoints/
+OpenKPAnnotations.tsv
 
