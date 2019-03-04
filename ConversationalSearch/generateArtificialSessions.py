@@ -97,7 +97,7 @@ if __name__ == "__main__":
         generateArtificialSessions(real,artificial, sessions, annoyEmbedding, 'sessionsEmbedding.tsv')
         #Run on BERT embeddings
         print("Loading BERT Vectors")
-        real, artificial = loadVectors(sys.argv[4], realQueries)
+        real, artificial = loadVectors(sys.argv[4], realQueries, artificialQueries)
         print("Building Annnoy Query Embeddings")
         annoyEmbedding = generateAnnoy(real, artificial, 'BERT' + sys.argv[5], 1024)
         print("Generating Sessions Query Embeddings")
