@@ -8,6 +8,8 @@ To generate our projection corpus, we took the 1,010,916 MSMARCO queries and add
 Next, we sampled our Bing usage log from 2018-06-01 to 2018-11-30 to find a sample of sessions that that had more than 1 query and were likely to be conversational in nature. Next we remove all navigation, bot, junk, and adult sessions. Once we did this, we now had 18,986,870 unique user sessions of 344,147 unique queries. The average session was 2.6 queries long and the longest session was 160 queries. Just like we did for our public queries, we generated 2 embedding for each unique query. Finally, in order to merge the two, for each unique session we perform a nearest neighbor lookup in vector space. This allows us to join the public queries to the private sessions generating an artificial user session grounded in true user behavior. 
 
 We will release the full dataset shortly but while we are formulating the challange and usage we would appreciate feedback from the research community on how we should go ahead and filter these 18m sessions to be optimally usable. This initial public release includes 2 sets of 500,000 artificial sessions, one for each embedding method. 
+[BERT Based Sessions](https://msmarco.blob.core.windows.net/conversationalsearch/artificialSessionsBERT500k.tsv.gz)
+[Query Embedding Based Sessions](https://msmarco.blob.core.windows.net/conversationalsearch/artificialSessionsQueryEncoding500kSample.tsv.gz)
 
 
 ### Process
