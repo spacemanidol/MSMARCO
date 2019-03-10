@@ -1,1 +1,4 @@
-Usage: msmarco_eval_ranking.py <reference ranking> <candidate ranking>
+#####################
+MRR @10: 0.3435945520522088
+QueriesRanked: 6836
+#####################
