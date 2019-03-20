@@ -1,24 +1,15 @@
 # Duet Baseline
 To help the community reproduce our results and get started quickly, we are including a Duet v2 baseline on our leaderboard. The details of this model can be found in the following paper: https://arxiv.org/abs/1903.07666.
 
-For the original duet model, please see: https://arxiv.org/pdf/1610.08136.pdf and https://arxiv.org/pdf/1705.04803.pdf.
+For the Duet v1 model, please see: https://arxiv.org/pdf/1610.08136.pdf and https://arxiv.org/pdf/1705.04803.pdf.
 
 ## Requirements
-Python 3.5
-
-CUDA 9.0 
-
-Pytorch
-
-numpy
-
-jupyter
+Python 3.5, CUDA 9.0, Pytorch, numpy, jupyter
 
 ## Setup
 
 ## Citation
 Please cite the following papers, if you use the Duet model in your research.
-
 
 **Duet v2**
 ```
@@ -29,7 +20,6 @@ Please cite the following papers, if you use the Duet model in your research.
   year={2019}
 }
 ```
-
 
 **Duet v1**
 ```
@@ -42,7 +32,6 @@ Please cite the following papers, if you use the Duet model in your research.
   organization={International World Wide Web Conferences Steering Committee}
 }
 ```
-
 
 **Duet v1 on TREC CAR**
 ```
