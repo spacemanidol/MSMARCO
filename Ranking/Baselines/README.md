@@ -7,6 +7,20 @@ For the Duet v1 model, please see: https://arxiv.org/pdf/1610.08136.pdf and http
 Python 3.5, CUDA 9.0, Pytorch, numpy, jupyter
 
 ## Setup
+The Duet v2 code is mostly self-contained.
+It requires two extra data files, that are not part of the official MS MARCO dataset but are included with the code.
+
+### Vocabulary file
+The vocabulary file contains terms from the passage collection whose document frequency is above a certain threshold.
+The code references "word-vocab-small.tsv" which contains 71,486 terms from the MS MARCO passage collection.
+
+### Inverse document frequency file
+This file contains terms and their corresponding inverse document frequency (IDF) as computed according to the specification in the [paper](https://arxiv.org/abs/1903.07666).
+
+**Important**: The file "idfnew.norm.tsv" only contains terms from queries in MS MARCO train/dev/eval sets.
+This is because Duet v2 only needs IDF values corresponding to the terms in the query.
+This is not a general purpose IDF dataset for MS MARCO.
+If you need one, please make sure to generate one directly from the MS MARCO data.
 
 ## Citation
 Please cite the following papers, if you use the Duet model in your research.
