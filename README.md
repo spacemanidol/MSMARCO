@@ -50,6 +50,10 @@ Given a document D represented as text and cleanbody text a successful system is
 ##### Conversational Search
 Given a sequence of queries Q = q1,...,qn  TBD
 
+##### V1 MSMARCO Dataset
+The first iteration of the MSMARCO dataset was 100,000 queries and ran from Dec 2016-March 2018. The full data can be found below
+[Train](https://msmarco.blob.core.windows.net/msmsarcov1/train_v1.1.json.gz), [Dev](https://msmarco.blob.core.windows.net/msmsarcov1/dev_v1.1.json.gz), [Eval](https://msmarco.blob.core.windows.net/msmsarcov1/test_hidden_v1.1.json), [Evaluation Scripts](https://msmarco.blob.core.windows.net/msmsarcov1/ms_marco_eval_old.tar.gz)
+
 ### Feedback
 MS MARCO has been designed not as a dataset to be beat but an effort to establish a large community of researchers working on Machine Comprehension. If you have any thoughts on things we can do better, ideas for how to use datasets or general question please dont hesitate to [reach out and ask](mailto:ms-marco@microsoft.com?subject=MS MARCO Feedback).
 
