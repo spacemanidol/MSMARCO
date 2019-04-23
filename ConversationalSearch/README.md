@@ -3,7 +3,7 @@ Truly Conversational Search is the next logic step in the journey to generate in
 
 ## Corpus Generation
 To generate our projection corpus, we took the 1,010,916 MSMARCO queries and generated the query vectors for each unique queries. Once we had these embedding spaces, we build an Approximate Nearest Neighbor Index using [ANNOY](https://github.com/spotify/annoy).
-Next, we sampled our Bing usage log from 2018-06-01 to 2018-11-30 to find a sample of sessions that that had more than 1 query, shared a query that had a query embedding simialir to a MSMARCO query, and were likely to be conversational in nature. Next we remove all navigation, bot, junk, and adult sessions. Once we did this, we now had 45,040,730 unique user sessions of 344,147 unique queries. The average session was 2.6 queries long and the longest session was 160 queries. Just like we did for our public queries, we generated embedding for each unique query. Finally, in order to merge the two, for each unique session we perform a nearest neighbor search given the real queries query vector in the MSMARCO ANN Index. This allows us to join the public queries to the private sessions generating an artificial user session grounded in true user behavior. 
+Next, we sampled our Bing usage log from 2018-06-01 to 2018-11-30 to find a sample of sessions that that had more than 1 query, shared a query that had a query embedding similar to a MSMARCO query, and were likely to be conversational in nature. Next we remove all navigation, bot, junk, and adult sessions. Once we did this, we now had 45,040,730 unique user sessions of 344,147 unique queries. The average session was 2.6 queries long and the longest session was 160 queries. Just like we did for our public queries, we generated embedding for each unique query. Finally, in order to merge the two, for each unique session we perform a nearest neighbor search given the real queries query vector in the MSMARCO ANN Index. This allows us to join the public queries to the private sessions generating an artificial user session grounded in true user behavior. 
 
 An example of these search sessions is below.
 ```
@@ -21,7 +21,7 @@ marco-gen-dev-572       stock price tesla       fb stock price  home depot stock
 
 We first release [BERT Based Sessions](https://msmarco.blob.core.windows.net/conversationalsearch/artificialSessionsBERT500k.tsv.gz) and [Query Embedding Based Sessions](https://msmarco.blob.core.windows.net/conversationalsearch/artificialSessionsQueryEncoding500kSample.tsv.gz) which we shared with a small group of researchers to get feedback on what worked better. Based on community feedback and data exploration our we are releasing our first full scale dataset described below.
 
-1. Split the 45,040,730 artificial sessions into a train, dev and test. To do so, any session that included a query from the QnA eval set was considered eval and the reamining sessions were split 90%/10% between train and dev. These files are called full_marco_sessions_ann_split.* and have the following sizes
+1. Split the 45,040,730 artificial sessions into a train, dev and test. To do so, any session that included a query from the QnA eval set was considered eval and the remaining sessions were split 90%/10% between train and dev. These files are called full_marco_sessions_ann_split.* and have the following sizes
 ```
 spacemanidol@spacemanidol:/mnt/c/Users/dacamp/Desktop$ wc -l full_marco_sessions_ann_split.*
    3656706 full_marco_sessions_ann_split.dev.tsv
