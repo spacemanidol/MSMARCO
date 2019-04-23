@@ -48,7 +48,7 @@ Given a query q and a corpus of passages P = p1, p2, p3,... pn, a succeful syste
 Given a document D represented as text and cleanbody text a successful system is expected to provide 5 potential document keyphrases ranked by importance.
 
 ##### Conversational Search
-Given a sequence of queries Q = q1,...,qn  TBD
+Given a sequence of queries Q = q1,...,qn-1 predict query qn
 
 ##### V1 MSMARCO Dataset
 The first iteration of the MSMARCO dataset was 100,000 queries and ran from Dec 2016-March 2018. The full data can be found below
