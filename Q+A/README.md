@@ -15,6 +15,8 @@ Much like the v2.0 release, the v2.1 release is provided as a json file. This is
 
 Each line/entry containts the following parameters to be described below: query_id, query_type, query, passages, answers, and wellFormedAnswers.
 
+For the QA task the target output is present in 'answers'. For NLGen task the target output is present in 'wellFormedAnswers'.
+
 1. query_id: A unique id for each query that is used in evaluation
 2. query: A unique query based on initial Bing usage
 3. passages: A set of 10:passages, URLs, and an annotation if they were used to formulate and answer(is_selected:1). Two passages may come from the URL and these passages have been obtained by Bing as the most relevant passages. If a passage is maked as is_selected:1 it means the judge used that passage to formulate their answer. If a passage is marked as is_selected:0 it means the judge did not use that passage to generate their answer. Questions that have the answer of 'No Answer Present.' will have all passages marked as is_selecte: 0.
