@@ -77,7 +77,7 @@ We have made the official evaluation script along with a sample output file on t
 ./run.sh <path to reference json file> <path to candidate json file> 
 	
 ### Leaderboard Results
-To Help Teams iterate we are making the results of official submissions on our evaluation script(the scores, not the full submissions)availible. We will update these files as we update metrics and as new submisions come in. They can be found in the [Leaderboard Results](https://github.com/dfcf93/MSMARCOV2/tree/master/Q%2BA/Leaderboard%20Results) folder.
+To Help Teams iterate we are making the results of official submissions on our evaluation script(the scores, not the full submissions) available. We will update these files as we update metrics and as new submisions come in. They can be found in the [Leaderboard Results](https://github.com/dfcf93/MSMARCOV2/tree/master/Q%2BA/Leaderboard%20Results) folder.
 
 ### Submissions
 Once you have built a model that meets your expectations on evaluation with the dev set, you can submit your test results to get official evaluation on the test set. To ensure the integrity of the official test results, we do not release the correct answers for test set to the public. To submit your model for official evaluation on the test set, follow the below steps:
