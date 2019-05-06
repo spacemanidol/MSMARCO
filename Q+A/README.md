@@ -15,6 +15,8 @@ Much like the v2.0 release, the v2.1 release is provided as a json file. This is
 
 Each line/entry containts the following parameters to be described below: query_id, query_type, query, passages, answers, and wellFormedAnswers.
 
+For the QA task the target output is present in 'answers'. For NLGen task the target output is present in 'wellFormedAnswers'.
+
 1. query_id: A unique id for each query that is used in evaluation
 2. query: A unique query based on initial Bing usage
 3. passages: A set of 10:passages, URLs, and an annotation if they were used to formulate and answer(is_selected:1). Two passages may come from the URL and these passages have been obtained by Bing as the most relevant passages. If a passage is maked as is_selected:1 it means the judge used that passage to formulate their answer. If a passage is marked as is_selected:0 it means the judge did not use that passage to generate their answer. Questions that have the answer of 'No Answer Present.' will have all passages marked as is_selecte: 0.
@@ -75,7 +77,7 @@ We have made the official evaluation script along with a sample output file on t
 ./run.sh <path to reference json file> <path to candidate json file> 
 	
 ### Leaderboard Results
-To Help Teams iterate we are making the results of official submissions on our evaluation script(the scores, not the full submissions)availible. We will update these files as we update metrics and as new submisions come in. They can be found in the [Leaderboard Results](https://github.com/dfcf93/MSMARCOV2/tree/master/Q%2BA/Leaderboard%20Results) folder.
+To Help Teams iterate we are making the results of official submissions on our evaluation script(the scores, not the full submissions) available. We will update these files as we update metrics and as new submisions come in. They can be found in the [Leaderboard Results](https://github.com/dfcf93/MSMARCOV2/tree/master/Q%2BA/Leaderboard%20Results) folder.
 
 ### Submissions
 Once you have built a model that meets your expectations on evaluation with the dev set, you can submit your test results to get official evaluation on the test set. To ensure the integrity of the official test results, we do not release the correct answers for test set to the public. To submit your model for official evaluation on the test set, follow the below steps:
