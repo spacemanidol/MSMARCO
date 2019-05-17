@@ -4,7 +4,7 @@ import pandas as pd
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('Usage: tojson.py <input_path> <output_path>')
+        print('Usage: tojsonl.py <input_path> <output_path>')
         exit()
     infile = sys.argv[1]
     outfile = sys.argv[2]
