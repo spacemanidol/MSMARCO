@@ -45,20 +45,20 @@ rouge_l: 3.093306E-02
 
 ## Files ##
 ./
-- ms_marco_eval.py: MS MaRCo Evaluation script.
-- ms_marco_eval_test.py: Unit tests of ms_marco_eval.py .
-- LICENSE
-- run.sh: This script downloads dependent scripts, and compute evaluation metrics for MS MaRCo data set.
+- `ms_marco_eval.py`: MS MaRCo Evaluation script.
+- `ms_marco_eval_test.py`: Unit tests of ms_marco_eval.py .
+- `LICENSE`
+- `run.sh`: This script downloads dependent scripts, and compute evaluation metrics for MS MaRCo data set.
 
 ./sample_test_data
-- dev_as_references.json : unit test input from dev set.
-- dev_first_sentence_as_candidates.json : unit test with first sentence of first passage from dev set.
-- no_answer_test_candidates.json : unit test input for no answer case.
-- no_answer_test_references.json : unit test input for no answer case.
-- same_answer_test_candidates.json : unit test input for same answer case.
-- same_answer_test_references.json : unit test input for same answer case.
-- sample_candidates.json : unit test input for sample data.
-- sample_references.json : unit test input for sample data.
+- `dev_as_references.json` : unit test input from dev set.
+- `dev_first_sentence_as_candidates.json` : unit test with first sentence of first passage from dev set.
+- `no_answer_test_candidates.json` : unit test input for no answer case.
+- `no_answer_test_references.json` : unit test input for no answer case.
+- `same_answer_test_candidates.json` : unit test input for same answer case.
+- `same_answer_test_references.json` : unit test input for same answer case.
+- `sample_candidates.json` : unit test input for sample data.
+- `sample_references.json` : unit test input for sample data.
 
 ## References ##
 - [Microsoft MAchine Reading COmprehension Dataset](https://arxiv.org/pdf/1611.09268v1.pdf).
