@@ -8,24 +8,32 @@ Evaluation codes for MS MaRCo (Microsoft MAchine Reading COmprehension Dataset).
 - spacy: https://spacy.io/docs/usage/
 
 ## Instructions ##
-Execute run.sh from /ms_marco_metrics/ in command line:
-/ms_marco_metrics$ ./run.sh <path to reference json file> <path to candidate json file>
-Example:
-/ms_marco_metrics$ ./run.sh /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json
+Execute run.sh from /ms_marco_metrics/ in command line:  
+/ms_marco_metrics$ ./run.sh <path to reference json file> <path to candidate json file>  
+Example:  
+/ms_marco_metrics$ ./run.sh /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json   /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json  
 
-Each line in both reference and candidate json files should be in format:
-{"query_id": <a_query_id_int>, "answers": [<list_of_answers_string>]}
-Note: <list_of_answers_string> must contain up to 1 answer in the candidate file.
-Example (./sample_test_data/sample_references.json file):
-{"query_id": 14509, "answers": ["It is include anemia, bleeding disorders such as hemophilia, blood clots, and blood cancers such as leukemia, lymphoma, and myeloma.", "HIV, hepatitis B, hepatitis C, and viral hemorrhagic fevers."]}
-{"query_id": 14043, "answers": ["sp2", "sp2 hybridization"]}
+Each line in both reference and candidate json files should be in format:  
+{"query_id": <a_query_id_int>, "answers": [<list_of_answers_string>]}  
+Note: <list_of_answers_string> must contain up to 1 answer in the candidate file.  
+Example (./sample_test_data/sample_references.json file):  
+```
+{
+  "query_id": 14509, 
+  "answers": ["It is include anemia, bleeding disorders such as hemophilia, blood clots, and blood cancers such as leukemia, lymphoma, and myeloma.", "HIV, hepatitis B, hepatitis C, and viral hemorrhagic fevers."]}  
 
-Output from run.sh will be in the similar format to bellow:
-bleu_1: 8.520511E-03
-bleu_2: 4.666876E-10
-bleu_3: 1.772338E-09
-bleu_4: 3.453875E-09
-rouge_l: 3.093306E-02
+{
+  "query_id": 14043, 
+  "answers": ["sp2", "sp2 hybridization"]
+}  
+```
+
+Output from run.sh will be in the similar format to bellow:  
+bleu_1: 8.520511E-03  
+bleu_2: 4.666876E-10  
+bleu_3: 1.772338E-09  
+bleu_4: 3.453875E-09  
+rouge_l: 3.093306E-02  
 
 ## Files ##
 ./
