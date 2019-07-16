@@ -8,15 +8,23 @@ Evaluation codes for MS MaRCo (Microsoft MAchine Reading COmprehension Dataset).
 - spacy: https://spacy.io/docs/usage/
 
 ## Instructions ##
-Execute run.sh from /ms_marco_metrics/ in command line:  
+Execute `run.sh` from `/ms_marco_metrics/` in command line:  
+```
 /ms_marco_metrics$ ./run.sh <path to reference json file> <path to candidate json file>  
+```
 Example:  
-/ms_marco_metrics$ ./run.sh /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json   /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json  
-
-Each line in both reference and candidate json files should be in format:  
-{"query_id": <a_query_id_int>, "answers": [<list_of_answers_string>]}  
-Note: <list_of_answers_string> must contain up to 1 answer in the candidate file.  
-Example (./sample_test_data/sample_references.json file):  
+```
+/ms_marco_metrics$ ./run.sh /home/trnguye/ms_marco_metrics/sample_test_data/sample_references.json /home/trnguye/ms_marco_metrics/sample_test_data/sample_candidates.json
+```
+Each line in both reference and candidate json files should be in format:
+```
+{
+  "query_id": <a_query_id_int>, 
+  "answers": [<list_of_answers_string>]
+}
+```
+Note: `<list_of_answers_string>` must contain up to 1 answer in the candidate file.  
+Example (`./sample_test_data/sample_references.json` file):  
 ```
 {
   "query_id": 14509, 
